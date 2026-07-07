@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>禅道日志 Agent</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <h1>禅道日志 Agent</h1>
+          <div class="health" aria-label="禅道状态">
+            <span id="vpnStatus" class="health-pill unknown">VPN：未检测</span>
+            <span id="loginStatus" class="health-pill unknown">登录：未检测</span>
+            <span id="taskStatus" class="health-pill unknown">任务：未检测</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="checkStatus" type="button">检测状态</button>
+          <button id="saveConfig" type="button">保存配置</button>
+        </div>
+      </header>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>禅道</h2>
+          <label>登录地址<input id="zentaoLoginUrl"></label>
+          <label>用户名<input id="zentaoUsername"></label>
+          <label>密码<input id="zentaoPassword" type="password"></label>
+          <label>任务页地址<input id="zentaoTaskPageUrl"></label>
+        </div>
+
+        <div class="panel">
+          <h2>LLM</h2>
+          <label>Base URL<input id="llmBaseUrl"></label>
+          <label>API Key<input id="llmApiKey" type="password"></label>
+          <label>模型<input id="llmModel"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>填报设置</h2>
+        <div class="row">
+          <label>开始日期<input id="startDate" type="date"></label>
+          <label>结束日期<input id="endDate" type="date"></label>
+          <label>来源
+            <select id="source">
+              <option value="code">代码库总结</option>
+              <option value="longText">长文本框输入</option>
+            </select>
+          </label>
+          <label>代码库类型
+            <select id="repoType">
+              <option value="git">Git</option>
+              <option value="hg">HG</option>
+              <option value="svn">SVN</option>
+            </select>
+          </label>
+        </div>
+        <label>代码库目录，每行一个<textarea id="repositories" rows="4"></textarea></label>
+        <label>长文本工作描述<textarea id="longText" rows="7"></textarea></label>
+        <div class="actions">
+          <button id="generate">生成预览</button>
+          <button id="savePreview">保存预览</button>
+          <button id="submitNow">立即录入禅道</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>预览</h2>
+        <div id="status" class="status">正在加载...</div>
+        <div id="preview"></div>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

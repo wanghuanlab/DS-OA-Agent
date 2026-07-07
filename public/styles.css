@@ -1,0 +1,214 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #202124;
+  background: #f6f7f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.shell {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+
+header,
+.panel {
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.health {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.health-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #4b5563;
+  background: #f9fafb;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.health-pill.ok {
+  border-color: #86efac;
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.health-pill.error {
+  border-color: #fecaca;
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.health-pill.unknown {
+  border-color: #d1d5db;
+  color: #4b5563;
+  background: #f9fafb;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #c8ccd2;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #1f6feb;
+  color: #fff;
+  padding: 10px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status {
+  min-height: 24px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #4b5563;
+  background: #f3f4f6;
+}
+
+.status.success {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.status.error {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.status.info {
+  color: #1e3a8a;
+  background: #dbeafe;
+}
+
+.preview-head,
+.preview-row {
+  display: grid;
+  grid-template-columns: 120px minmax(220px, 0.9fr) minmax(280px, 1.3fr) 120px;
+  gap: 14px;
+  align-items: start;
+}
+
+.preview-head {
+  font-weight: 700;
+  color: #4b5563;
+  padding: 8px 0;
+}
+
+.preview-row {
+  padding: 14px 0;
+  border-top: 1px solid #eceff3;
+}
+
+.date {
+  font-weight: 700;
+  padding-top: 10px;
+}
+
+.task-select,
+.hours-input {
+  min-height: 42px;
+}
+
+.empty {
+  color: #6b7280;
+}
+
+@media (max-width: 760px) {
+  header,
+  .grid,
+  .row,
+  .preview-row {
+    display: block;
+  }
+
+  header button,
+  .actions button {
+    width: 100%;
+  }
+
+  .header-actions {
+    margin-top: 14px;
+  }
+
+  .health-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}

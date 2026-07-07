@@ -1,0 +1,47 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5173,
+    "openBrowserOnStart": true
+  },
+  "zentao": {
+    "loginUrl": "http://192.168.0.216:30085/user-login.html",
+    "username": "",
+    "password": "",
+    "taskPageUrl": "http://192.168.0.216:30085/my-work-task.html",
+    "taskName": ""
+  },
+  "llm": {
+    "baseUrl": "https://api.deepseek.com",
+    "apiKey": "",
+    "model": "deepseek-v4-flash",
+    "temperature": 0.2
+  },
+  "report": {
+    "defaultSource": "code",
+    "period": {
+      "type": "thisWeekToToday",
+      "weekendBehavior": "mondayToFriday"
+    },
+    "code": {
+      "type": "git",
+      "repositories": []
+    },
+    "hg": {
+      "repositories": []
+    },
+    "longText": ""
+  },
+  "schedule": {
+    "enabled": true,
+    "timezone": "Asia/Shanghai",
+    "previewCron": "0 16 * * 5",
+    "autoSubmitCron": "0 17 * * 5",
+    "confirmWindowMinutes": 60
+  },
+  "automation": {
+    "autoSubmit": true,
+    "headless": false,
+    "keepBrowserOpenOnError": true
+  }
+}
