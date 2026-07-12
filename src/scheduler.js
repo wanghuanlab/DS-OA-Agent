@@ -15,7 +15,7 @@ export function startScheduler({ config, baseUrl, onStatus = console.log }) {
     async () => {
       try {
         const period = getDefaultPeriod(new Date(), timezone);
-        const preview = await generatePreview(config, { period, source: config.report.defaultSource });
+        const preview = await generatePreview(config, { period });
         await savePreview(preview);
         await open(baseUrl);
         onStatus('Scheduled preview generated.');

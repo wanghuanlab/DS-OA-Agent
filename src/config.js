@@ -22,9 +22,10 @@ export const DEFAULT_CONFIG = {
   report: {
     defaultSource: 'code',
     period: { type: 'thisWeekToToday', weekendBehavior: 'mondayToFriday' },
-    code: { type: 'hg', repositories: [] },
+    code: { type: 'auto', repositories: [], authors: [] },
     hg: { repositories: [] },
-    longText: ''
+    longText: '',
+    supplements: []
   },
   schedule: {
     enabled: true,

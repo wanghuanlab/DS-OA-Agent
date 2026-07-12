@@ -1,11 +1,13 @@
-import { readFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { dirname, extname, join, resolve } from 'node:path';
 import Fastify from 'fastify';
 import { loadConfig, normalizeConfig, saveConfig, redactConfig } from './config.js';
 import { getDefaultPeriod } from './period.js';
 import { generatePreview } from './generator.js';
 import { loadPreview, savePreview } from './preview-store.js';
 import { checkZentaoStatus, listZentaoTasks, submitToZentao } from './zentao.js';
+import { inspectCodeRepositories } from './vcs.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -40,10 +42,41 @@ export async function createServer() {
     const period = request.body?.period ?? getDefaultPeriod(new Date(), config.schedule.timezone);
     const preview = await generatePreview(config, {
       period,
-      source: request.body?.source ?? config.report.defaultSource,
       longText: request.body?.longText
     });
     return { preview: await savePreview(preview) };
+  });
+
+  app.post('/api/repositories/check', async (request) => {
+    const config = normalizeConfig(request.body?.config ?? await loadConfig());
+    const period = request.body?.period ?? getDefaultPeriod(new Date(), config.schedule.timezone);
+    const code = config.report?.code ?? {};
+    return {
+      result: await inspectCodeRepositories(
+        'auto',
+        code.repositories ?? [],
+        period.startDate,
+        period.endDate
+      )
+    };
+  });
+
+  app.get('/api/directories', async (request) => {
+    const requestedPath = typeof request.query?.path === 'string' && request.query.path.trim()
+      ? request.query.path
+      : homedir();
+    const currentPath = resolve(requestedPath);
+    const entries = await readdir(currentPath, { withFileTypes: true });
+    return {
+      currentPath,
+      parentPath: dirname(currentPath),
+      directories: entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .filter((name) => !name.startsWith('.') || ['.git', '.hg', '.svn'].includes(name))
+        .sort((left, right) => left.localeCompare(right, 'zh-Hans-CN'))
+        .map((name) => ({ name, path: join(currentPath, name) }))
+    };
   });
 
   app.post('/api/submit', async (request) => {

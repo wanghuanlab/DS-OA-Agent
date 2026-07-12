@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="header-actions">
-          <button id="checkStatus" type="button">检测状态</button>
+          <button id="checkStatus" type="button">状态检测与更新</button>
           <button id="saveConfig" type="button">保存配置</button>
         </div>
       </header>
@@ -42,25 +42,23 @@
 
       <section class="panel">
         <h2>填报设置</h2>
+        <h3>选择日期</h3>
         <div class="row">
           <label>开始日期<input id="startDate" type="date"></label>
           <label>结束日期<input id="endDate" type="date"></label>
-          <label>来源
-            <select id="source">
-              <option value="code">代码库总结</option>
-              <option value="longText">长文本框输入</option>
-            </select>
-          </label>
-          <label>代码库类型
-            <select id="repoType">
-              <option value="git">Git</option>
-              <option value="hg">HG</option>
-              <option value="svn">SVN</option>
-            </select>
-          </label>
         </div>
-        <label>代码库目录，每行一个<textarea id="repositories" rows="4"></textarea></label>
-        <label>长文本工作描述<textarea id="longText" rows="7"></textarea></label>
+        <h3>选择代码库目录</h3>
+        <div class="repo-tools">
+          <label>代码库目录<input id="repositoryPath" placeholder="输入或粘贴本机代码库目录"></label>
+          <input id="directoryPicker" type="file" webkitdirectory directory hidden>
+          <button id="chooseDirectory" type="button">选择文件夹</button>
+          <button id="addRepository" type="button">添加</button>
+          <button id="checkRepositories" type="button">检查代码库</button>
+        </div>
+        <div id="repositoryList" class="repo-list"></div>
+        <label>提交人
+          <select id="commitAuthors" multiple size="4"></select>
+        </label>
         <div class="actions">
           <button id="generate">生成预览</button>
           <button id="savePreview">保存预览</button>
@@ -74,6 +72,21 @@
         <div id="preview"></div>
       </section>
     </main>
+    <div id="directoryBrowser" class="modal" hidden>
+      <div class="modal-body">
+        <div class="modal-head">
+          <strong>选择代码库目录</strong>
+          <button id="closeDirectoryBrowser" type="button">关闭</button>
+        </div>
+        <div id="directoryCurrent" class="directory-current"></div>
+        <div class="directory-actions">
+          <button id="directoryParent" type="button">上一级</button>
+          <button id="selectDirectory" type="button">选择当前目录</button>
+        </div>
+        <div id="directoryList" class="directory-list"></div>
+      </div>
+    </div>
+    <div id="toastRoot" class="toast-root" aria-live="polite"></div>
     <script src="/app.js" type="module"></script>
   </body>
 </html>

@@ -1,4 +1,6 @@
 import { execFile } from 'node:child_process';
+import { access } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -48,6 +50,44 @@ export function parseSvnLog(stdout) {
     .filter((commit) => commit.date && commit.message);
 }
 
+export function filterCommitsByAuthors(commits, authors = []) {
+  const selected = new Set(authors.map((author) => String(author).trim()).filter(Boolean));
+  if (selected.size === 0) return commits;
+  return commits.filter((commit) => selected.has(String(commit.author ?? '').trim()));
+}
+
+export function collectCommitAuthors(commits = []) {
+  const counts = new Map();
+  for (const commit of commits) {
+    const author = String(commit.author ?? '').trim();
+    if (!author) continue;
+    counts.set(author, (counts.get(author) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
+}
+
+async function pathExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function detectRepositoryType(repository) {
+  if (await pathExists(join(repository, '.git'))) return 'git';
+  if (await pathExists(join(repository, '.hg'))) return 'hg';
+  if (await pathExists(join(repository, '.svn'))) return 'svn';
+  throw new Error(`不是 Git、HG 或 SVN 工作目录：${repository}`);
+}
+
+function isUnsupportedRepositoryError(error) {
+  return /不是 Git、HG 或 SVN 工作目录/.test(error.message);
+}
+
 async function readGitCommits(repository, startDate, endDate) {
   const { stdout } = await execFileAsync(
     'git',
@@ -77,20 +117,76 @@ async function readSvnCommits(repository, startDate, endDate) {
 }
 
 export async function readCodeCommits(repositoryType, repository, startDate, endDate) {
-  if (repositoryType === 'git') return readGitCommits(repository, startDate, endDate);
-  if (repositoryType === 'svn') return readSvnCommits(repository, startDate, endDate);
-  if (repositoryType === 'hg') return readHgCommits(repository, startDate, endDate);
-  throw new Error(`不支持的代码库类型：${repositoryType}`);
+  const detectedType = repositoryType && repositoryType !== 'auto'
+    ? repositoryType
+    : await detectRepositoryType(repository);
+  if (detectedType === 'git') return readGitCommits(repository, startDate, endDate);
+  if (detectedType === 'svn') return readSvnCommits(repository, startDate, endDate);
+  if (detectedType === 'hg') return readHgCommits(repository, startDate, endDate);
+  throw new Error(`不支持的代码库类型：${detectedType}`);
 }
 
-export async function readCodeCommitsByDate(repositoryType, repositories, startDate, endDate) {
+export async function readCodeCommitsByDate(repositoryType, repositories, startDate, endDate, authors = []) {
   const grouped = {};
   for (const repository of repositories.filter(Boolean)) {
-    const commits = await readCodeCommits(repositoryType, repository, startDate, endDate);
+    const repositoryPath = typeof repository === 'string' ? repository : repository.path;
+    let rawCommits = [];
+    try {
+      rawCommits = await readCodeCommits(repositoryType ?? 'auto', repositoryPath, startDate, endDate);
+    } catch (error) {
+      if (isUnsupportedRepositoryError(error)) continue;
+      throw error;
+    }
+    const commits = filterCommitsByAuthors(rawCommits, authors)
+      .map((commit) => ({
+        ...commit,
+        taskId: typeof repository === 'string' ? '' : String(repository.taskId ?? ''),
+        taskName: typeof repository === 'string' ? '' : String(repository.taskName ?? ''),
+        repositoryDescription: typeof repository === 'string' ? '' : String(repository.description ?? '')
+      }));
     for (const commit of commits) {
       grouped[commit.date] ??= [];
       grouped[commit.date].push(commit);
     }
   }
   return grouped;
+}
+
+export async function inspectCodeRepositories(repositoryType, repositories, startDate, endDate) {
+  const result = {
+    ok: true,
+    commits: [],
+    authors: [],
+    repositories: [],
+    errors: []
+  };
+
+  for (const repository of repositories.filter(Boolean)) {
+    const repositoryPath = typeof repository === 'string' ? repository : repository.path;
+    try {
+      const type = repositoryType && repositoryType !== 'auto'
+        ? repositoryType
+        : await detectRepositoryType(repositoryPath);
+      const commits = await readCodeCommits(type, repositoryPath, startDate, endDate);
+      result.commits.push(...commits);
+      result.repositories.push({ path: repositoryPath, type, ok: true, commitCount: commits.length });
+    } catch (error) {
+      if (isUnsupportedRepositoryError(error)) {
+        result.repositories.push({
+          path: repositoryPath,
+          ok: true,
+          skipped: true,
+          commitCount: 0,
+          message: '已忽略：不是 Git、HG 或 SVN 工作目录'
+        });
+        continue;
+      }
+      result.ok = false;
+      result.errors.push({ path: repositoryPath, message: error.message });
+      result.repositories.push({ path: repositoryPath, ok: false, commitCount: 0, message: error.message });
+    }
+  }
+
+  result.authors = collectCommitAuthors(result.commits);
+  return result;
 }
