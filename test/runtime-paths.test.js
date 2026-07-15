@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import test from 'node:test';
 import { configureRuntimePaths, dataPath, getRuntimePaths, staticPath } from '../src/runtime-paths.js';
 import { DEFAULT_CONFIG } from '../src/config.js';
@@ -13,8 +13,8 @@ test('configures desktop data and static paths independently', () => {
   const original = getRuntimePaths();
   try {
     configureRuntimePaths({ dataDir: '/tmp/zentao-data', staticDir: '/tmp/zentao-static' });
-    assert.equal(dataPath('config', 'config.json'), join('/tmp/zentao-data', 'config', 'config.json'));
-    assert.equal(staticPath('index.html'), join('/tmp/zentao-static', 'index.html'));
+    assert.equal(dataPath('config', 'config.json'), resolve('/tmp/zentao-data', 'config', 'config.json'));
+    assert.equal(staticPath('index.html'), resolve('/tmp/zentao-static', 'index.html'));
   } finally {
     configureRuntimePaths(original);
   }

@@ -14,7 +14,7 @@ if (process.platform !== 'darwin') {
 
 const requestedArchitecture = process.argv.find((argument) => ['--arm64', '--x64'].includes(argument));
 const architecture = requestedArchitecture?.slice(2) ?? (process.arch === 'arm64' ? 'arm64' : 'x64');
-run('npx', ['electron-builder', '--mac', 'zip', `--${architecture}`]);
+run('npx', ['electron-builder', '--mac', 'zip', `--${architecture}`, '--publish', 'never']);
 
 const appDirectory = join('dist', architecture === 'arm64' ? 'mac-arm64' : 'mac');
 const appPath = join(appDirectory, 'Zentao Log Agent.app');
