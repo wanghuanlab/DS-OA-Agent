@@ -5,6 +5,10 @@ let taskOptions = [];
 let repositories = [];
 let authorOptions = [];
 let currentDirectoryPath = '';
+let autoSaveTimer;
+let autoSaveRunning = false;
+let autoSavePending = false;
+let autoSaveReady = false;
 
 function setStatus(message) {
   $('status').textContent = message;
@@ -43,6 +47,7 @@ function renderZentaoStatus(status) {
   const tasks = status.tasks?.tasks ?? [];
   if (tasks.length > 0) {
     if (document.querySelector('[data-repository-path]')) readRepositoriesFromDom();
+    if (document.querySelector('[data-preview-date]')) readPreviewFromDom();
     taskOptions = tasks;
     renderPreview();
     renderRepositories();
@@ -67,6 +72,9 @@ function renderRepositories() {
     root.innerHTML = '<p class="empty">暂无代码库目录。</p>';
     return;
   }
+  rememberTaskOptions(repositories
+    .filter((repository) => typeof repository !== 'string')
+    .map((repository) => ({ id: repository.taskId, name: repository.taskName, left: repository.left })));
   for (const repository of repositories) {
     const path = typeof repository === 'string' ? repository : repository.path;
     const item = document.createElement('div');
@@ -97,7 +105,7 @@ function readRepositoriesFromDom() {
 function renderAuthors(selected = selectedAuthors()) {
   const select = $('commitAuthors');
   const selectedSet = new Set(selected);
-  select.innerHTML = '';
+  select.innerHTML = '<option value="">请选择提交人</option>';
   if (authorOptions.length === 0) {
     select.innerHTML = '<option value="">检查代码库后显示提交人</option>';
     return;
@@ -123,6 +131,7 @@ function addRepository(path) {
   }
   repositories.push({ path: repositoryPath, taskId: '', taskName: '', description: '' });
   renderRepositories();
+  scheduleAutoSave();
   setFeedback('代码库目录已添加。', 'success');
   return true;
 }
@@ -196,11 +205,41 @@ function readFormConfig() {
   return config;
 }
 
+async function persistConfigAutomatically() {
+  if (!autoSaveReady || !config) return;
+  if (autoSaveRunning) {
+    autoSavePending = true;
+    return;
+  }
+  autoSaveRunning = true;
+  try {
+    await jsonFetch('/api/config', {
+      method: 'POST',
+      body: JSON.stringify({ config: readFormConfig() })
+    });
+    showToast('配置已自动保存。', 'success');
+  } catch (error) {
+    showToast(`配置自动保存失败：${error.message}`, 'error');
+  } finally {
+    autoSaveRunning = false;
+    if (autoSavePending) {
+      autoSavePending = false;
+      scheduleAutoSave(0);
+    }
+  }
+}
+
+function scheduleAutoSave(delay = 700) {
+  if (!autoSaveReady) return;
+  window.clearTimeout(autoSaveTimer);
+  autoSaveTimer = window.setTimeout(persistConfigAutomatically, delay);
+}
+
 function renderConfig() {
   $('zentaoLoginUrl').value = config.zentao.loginUrl ?? '';
   $('zentaoUsername').value = config.zentao.username ?? '';
   $('zentaoPassword').value = config.zentao.password ?? '';
-  $('zentaoTaskPageUrl').value = config.zentao.taskPageUrl ?? 'http://192.168.0.216:30085/my-work-task.html';
+  $('zentaoTaskPageUrl').value = config.zentao.taskPageUrl ?? '';
   $('llmBaseUrl').value = config.llm.baseUrl ?? '';
   $('llmApiKey').value = config.llm.apiKey ?? '';
   $('llmModel').value = config.llm.model ?? '';
@@ -213,8 +252,9 @@ function renderConfig() {
 function taskSelectHtml(selectedId = '', className = 'task-select') {
   const options = ['<option value="">请选择任务</option>'];
   for (const task of taskOptions) {
-    const selected = task.id === selectedId ? ' selected' : '';
-    options.push(`<option value="${escapeHtml(task.id)}" data-name="${escapeHtml(task.name)}" data-left="${escapeHtml(task.left ?? '')}"${selected}>[${escapeHtml(task.id)}] ${escapeHtml(task.name)}</option>`);
+    const selected = String(task.id) === String(selectedId) ? ' selected' : '';
+    const remaining = String(task.left ?? '').trim() ? `（剩余 ${escapeHtml(task.left)}h）` : '';
+    options.push(`<option value="${escapeHtml(task.id)}" data-name="${escapeHtml(task.name)}" data-left="${escapeHtml(task.left ?? '')}"${selected}>[${escapeHtml(task.id)}] ${escapeHtml(task.name)}${remaining}</option>`);
   }
   return `<select class="${escapeHtml(className)}">${options.join('')}</select>`;
 }
@@ -258,20 +298,54 @@ function renderPreview() {
     root.innerHTML = '<p class="empty">暂无预览。</p>';
     return;
   }
-  root.innerHTML = '<div class="preview-head"><div>日期</div><div>任务</div><div>工作描述</div><div>耗时(小时)</div></div>';
   for (const entry of preview.entries) {
     rememberTaskOptions([{ id: entry.taskId ?? '', name: entry.taskName ?? '', left: entry.left ?? '' }]);
+  }
+  root.innerHTML = '<div class="preview-head"><div>日期</div><div>任务</div><div>工作描述</div><div>耗时(小时)</div><div>操作</div></div>';
+  const renderedDates = new Set();
+  preview.entries.forEach((entry, index) => {
+    const firstForDate = !renderedDates.has(entry.date);
+    renderedDates.add(entry.date);
     const row = document.createElement('div');
     row.className = 'preview-row';
     row.dataset.previewDate = entry.date;
+    row.dataset.previewIndex = String(index);
     row.innerHTML = `
-      <div class="date">${escapeHtml(entry.date)}</div>
+      <div class="preview-date-cell">${firstForDate ? `<span class="date">${escapeHtml(entry.date)}</span><button type="button" class="add-preview-entry" data-add-preview-date="${escapeHtml(entry.date)}">+ 添加任务</button>` : ''}</div>
       <div>${taskSelectHtml(entry.taskId ?? '')}</div>
       <textarea rows="4">${escapeHtml(entry.content || (entry.items ?? []).join('\n'))}</textarea>
       <input class="hours-input" type="number" min="0" step="0.5" value="${escapeHtml(entry.hours ?? 8)}">
+      <button type="button" class="remove-preview-entry" data-remove-preview-index="${index}" title="移除这条工作记录" aria-label="移除这条工作记录">×</button>
     `;
     root.append(row);
+  });
+}
+
+function addPreviewEntry(date) {
+  preview = readPreviewFromDom();
+  preview.entries.push({
+    date,
+    taskId: '',
+    taskName: '',
+    left: '0',
+    content: '',
+    items: [],
+    hours: 1
+  });
+  preview.entries.sort((left, right) => left.date.localeCompare(right.date));
+  renderPreview();
+  showToast(`${date} 已添加一条任务记录。`, 'success');
+}
+
+function removePreviewEntry(index) {
+  preview = readPreviewFromDom();
+  const [removed] = preview.entries.splice(index, 1);
+  if (removed && !preview.entries.some((entry) => entry.date === removed.date)) {
+    preview.entries.push({ date: removed.date, taskId: '', taskName: '', left: '0', content: '', items: [], hours: 8 });
+    preview.entries.sort((left, right) => left.date.localeCompare(right.date));
   }
+  renderPreview();
+  showToast('工作记录已移除。', 'success');
 }
 
 async function boot() {
@@ -286,17 +360,10 @@ async function boot() {
   $('startDate').value = period.startDate;
   $('endDate').value = period.endDate;
   renderPreview();
+  autoSaveReady = true;
   setFeedback('已加载配置和预览状态。', 'success');
   await checkZentaoStatus();
 }
-
-$('saveConfig').addEventListener('click', async () => {
-  await runAction(
-    '正在保存配置...',
-    '配置已保存。',
-    () => jsonFetch('/api/config', { method: 'POST', body: JSON.stringify({ config: readFormConfig() }) })
-  );
-});
 
 async function checkZentaoStatus() {
   setHealth('vpnStatus', 'VPN', 'unknown', '更新中');
@@ -338,7 +405,27 @@ $('repositoryList').addEventListener('click', (event) => {
   readRepositoriesFromDom();
   repositories = repositories.filter((repository) => (typeof repository === 'string' ? repository : repository.path) !== path);
   renderRepositories();
+  scheduleAutoSave();
   setFeedback('代码库目录已移除。', 'success');
+});
+
+$('repositoryList').addEventListener('input', () => scheduleAutoSave());
+$('repositoryList').addEventListener('change', () => scheduleAutoSave());
+$('commitAuthors').addEventListener('change', () => scheduleAutoSave());
+
+for (const id of ['zentaoLoginUrl', 'zentaoUsername', 'zentaoPassword', 'zentaoTaskPageUrl', 'llmBaseUrl', 'llmApiKey', 'llmModel']) {
+  $(id).addEventListener('input', () => scheduleAutoSave());
+  $(id).addEventListener('change', () => scheduleAutoSave());
+}
+
+$('preview').addEventListener('click', (event) => {
+  const addDate = event.target.dataset.addPreviewDate;
+  if (addDate) {
+    addPreviewEntry(addDate);
+    return;
+  }
+  const removeIndex = event.target.dataset.removePreviewIndex;
+  if (removeIndex !== undefined) removePreviewEntry(Number(removeIndex));
 });
 
 $('closeDirectoryBrowser').addEventListener('click', () => {
@@ -383,7 +470,11 @@ $('checkRepositories').addEventListener('click', async () => {
   }));
   const previous = selectedAuthors();
   authorOptions = data.result.authors ?? [];
+  for (const name of previous) {
+    if (!authorOptions.some((author) => author.name === name)) authorOptions.push({ name, count: 0 });
+  }
   renderAuthors(previous);
+  scheduleAutoSave();
   const failed = data.result.errors?.length ?? 0;
   const skipped = (data.result.repositories ?? []).filter((repository) => repository.skipped).length;
   const commitCount = data.result.commits?.length ?? 0;
@@ -424,7 +515,7 @@ $('savePreview').addEventListener('click', async () => {
 });
 
 $('submitNow').addEventListener('click', async () => {
-  await runAction('正在录入禅道...', '录入流程已执行，结果见 output/playwright。', async () => {
+  await runAction('正在录入禅道...', '禅道日志录入完成。', async () => {
     preview = readPreviewFromDom();
     if (!preview) throw new Error('当前没有可录入的预览，请先生成预览。');
     if (preview.entries.some((entry) => entry.content.trim() && !entry.taskId)) throw new Error('请在预览中为每条工作记录选择任务。');

@@ -10,7 +10,7 @@ const port = config.server?.port ?? 5173;
 const baseUrl = `http://${host}:${port}`;
 
 await app.listen({ host, port });
-startScheduler({ config, baseUrl });
+startScheduler({ config, baseUrl, getConfig: loadConfig });
 
 console.log(`Zentao Log Agent running at ${baseUrl}`);
 if (config.server?.openBrowserOnStart) {

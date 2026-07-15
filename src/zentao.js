@@ -1,5 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { dataPath } from './runtime-paths.js';
+
+let taskListProvider;
+
+export function setTaskListProvider(provider) {
+  taskListProvider = provider;
+}
 
 function zentaoOrigin(loginUrl) {
   return new URL(loginUrl).origin;
@@ -33,6 +40,33 @@ function filledEntries(entries) {
     }))
     .filter((entry) => entry.lines.length > 0)
     .slice(0, 5);
+}
+
+function formatHours(value) {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
+}
+
+export function calculateTaskRemaining(estimate, consumed) {
+  if (!String(estimate ?? '').trim() || !String(consumed ?? '').trim()) {
+    throw new Error('禅道任务缺少有效的最初预计或累计消耗。');
+  }
+  const estimatedHours = Number(estimate);
+  const consumedHours = Number(consumed);
+  if (!Number.isFinite(estimatedHours) || !Number.isFinite(consumedHours)) {
+    throw new Error('禅道任务缺少有效的最初预计或累计消耗。');
+  }
+  return Math.max(0, estimatedHours - consumedHours);
+}
+
+export function calculateRemainingHours(entries, initialRemaining) {
+  const initial = entries.find((entry) => String(entry.left ?? '').trim() && Number.isFinite(Number(entry.left)));
+  let remaining = initialRemaining === undefined ? Number(initial?.left ?? 0) : Number(initialRemaining);
+  if (!Number.isFinite(remaining)) remaining = 0;
+  return entries.map((entry) => {
+    const consumed = Number(entry.hours ?? entry.consumed ?? 0);
+    remaining = Math.max(0, remaining - (Number.isFinite(consumed) ? consumed : 0));
+    return { ...entry, left: formatHours(remaining) };
+  });
 }
 
 export function buildEffortPayload(taskId, entries) {
@@ -82,6 +116,10 @@ export function getZentaoTokenUrl(config) {
   return `${zentaoOrigin(config.zentao.loginUrl)}/api.php/v1/tokens`;
 }
 
+export function getZentaoTaskUrl(config, taskId) {
+  return `${zentaoOrigin(config.zentao.loginUrl)}/api.php/v1/tasks/${taskId}`;
+}
+
 function parseFormAction(html, finalUrl) {
   const formOpen = html.match(/<form[^>]*id=["']createEffort["'][^>]*>/i)?.[0]
     ?? html.match(/<form[^>]*>/i)?.[0]
@@ -128,6 +166,27 @@ export async function requestZentaoToken(config, timeoutMs = 8000) {
     status: tokenResponse.status,
     token: tokenJson.token ?? '',
     cookie: combineSetCookies(setCookies)
+  };
+}
+
+export async function requestZentaoTask(config, taskId, login, timeoutMs = 8000) {
+  const response = await fetchWithTimeout(getZentaoTaskUrl(config, taskId), {
+    headers: {
+      Token: login.token,
+      ...(login.cookie ? { cookie: login.cookie } : {})
+    }
+  }, timeoutMs);
+  const body = await response.json().catch(() => ({}));
+  const task = body.data ?? body;
+  if (!response.ok || !task?.id) {
+    throw new Error(`读取禅道任务 ${taskId} 的工时失败：HTTP ${response.status}`);
+  }
+  return {
+    id: String(task.id),
+    estimate: String(task.estimate ?? ''),
+    consumed: String(task.consumed ?? ''),
+    left: String(task.left ?? ''),
+    remaining: calculateTaskRemaining(task.estimate, task.consumed)
   };
 }
 
@@ -208,6 +267,10 @@ export async function listZentaoTasks(config) {
     throw new Error('请先填写禅道地址、用户名和密码。');
   }
 
+  if (taskListProvider) {
+    return normalizeTaskRows(await taskListProvider(config));
+  }
+
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
@@ -245,13 +308,15 @@ export async function submitToZentao(config, preview) {
 
   try {
     const result = await submitTaskLogsByHttp(config, preview.entries, log);
-    await mkdir('output/playwright', { recursive: true });
-    await writeFile('output/playwright/zentao-submit.log', `${log.join('\n')}\n`);
+    const outputDirectory = dataPath('output', 'playwright');
+    await mkdir(outputDirectory, { recursive: true });
+    await writeFile(dataPath('output', 'playwright', 'zentao-submit.log'), `${log.join('\n')}\n`);
     return result;
   } catch (error) {
-    await mkdir('output/playwright', { recursive: true });
+    const outputDirectory = dataPath('output', 'playwright');
+    await mkdir(outputDirectory, { recursive: true });
     log.push(`ERROR: ${error.message}`);
-    await writeFile('output/playwright/zentao-submit.log', `${log.join('\n')}\n`);
+    await writeFile(dataPath('output', 'playwright', 'zentao-submit.log'), `${log.join('\n')}\n`);
     throw error;
   }
 }
@@ -278,7 +343,9 @@ async function submitTaskLogsByHttp(config, entries, log) {
 
   let submittedRows = 0;
   for (const group of taskGroups) {
-    const chunks = chunkEntries(group.entries, 5);
+    const task = await requestZentaoTask(config, group.taskId, login);
+    log.push(`Task ${group.taskId} effort: estimate=${task.estimate}, consumed=${task.consumed}, calculatedRemaining=${formatHours(task.remaining)}`);
+    const chunks = chunkEntries(calculateRemainingHours(group.entries, task.remaining), 5);
     for (const chunk of chunks) {
       const formUrl = `${origin}/task-recordEstimate-${group.taskId}.html?onlybody=yes`;
       const formResponse = await fetch(formUrl, {

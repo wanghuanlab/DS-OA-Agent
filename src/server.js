@@ -8,6 +8,7 @@ import { generatePreview } from './generator.js';
 import { loadPreview, savePreview } from './preview-store.js';
 import { checkZentaoStatus, listZentaoTasks, submitToZentao } from './zentao.js';
 import { inspectCodeRepositories } from './vcs.js';
+import { staticPath } from './runtime-paths.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -95,10 +96,12 @@ export async function createServer() {
     return { status: await checkZentaoStatus(config) };
   });
 
+  app.get('/favicon.ico', async (_request, reply) => reply.code(204).send());
+
   app.get('/*', async (request, reply) => {
     const requested = request.params['*'] || 'index.html';
     const file = requested === '' ? 'index.html' : requested;
-    const path = join(process.cwd(), 'public', file);
+    const path = staticPath(file);
     const content = await readFile(path);
     reply.type(TYPES[extname(path)] ?? 'application/octet-stream').send(content);
   });

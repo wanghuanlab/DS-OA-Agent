@@ -1,17 +1,62 @@
 {
   "name": "ds-oa-agent",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "本地禅道工作日志生成与录入客户端",
+  "author": "wanghuanlab",
   "private": true,
   "type": "module",
+  "main": "desktop/main.js",
   "scripts": {
     "start": "node src/index.js",
+    "desktop": "electron .",
     "test": "node --test",
-    "install:browsers": "npx playwright install chromium"
+    "install:browsers": "node scripts/install-playwright.js",
+    "build:mac": "node scripts/build-mac.js",
+    "build:mac:arm64": "node scripts/build-mac.js --arm64",
+    "build:mac:x64": "node scripts/build-mac.js --x64",
+    "build:win": "electron-builder --win --x64",
+    "build:desktop": "electron-builder --mac --win"
   },
   "dependencies": {
     "@playwright/test": "^1.45.0",
     "fastify": "^4.28.1",
     "node-cron": "^3.0.3",
     "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.wanghuanlab.ds-oa-agent",
+    "productName": "Zentao Log Agent",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "src/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

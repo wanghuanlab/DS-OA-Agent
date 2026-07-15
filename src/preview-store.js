@@ -1,9 +1,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { dataPath } from './runtime-paths.js';
 
 export const PREVIEW_PATH = 'output/preview/current.json';
 
-export async function savePreview(preview, path = PREVIEW_PATH) {
+export async function savePreview(preview, path = dataPath(PREVIEW_PATH)) {
   await mkdir(dirname(path), { recursive: true });
   const normalized = {
     ...preview,
@@ -13,7 +14,7 @@ export async function savePreview(preview, path = PREVIEW_PATH) {
   return normalized;
 }
 
-export async function loadPreview(path = PREVIEW_PATH) {
+export async function loadPreview(path = dataPath(PREVIEW_PATH)) {
   try {
     return JSON.parse(await readFile(path, 'utf8'));
   } catch (error) {

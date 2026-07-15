@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildEffortPayload,
+  calculateRemainingHours,
+  calculateTaskRemaining,
   checkZentaoStatus,
   combineSetCookies,
   getTaskPageUrl,
+  getZentaoTaskUrl,
   getZentaoTokenUrl,
   groupEntriesByTask,
   normalizeTaskRows,
@@ -15,17 +18,17 @@ import {
 test('uses my task page as default task log page', () => {
   const url = getTaskPageUrl({
     zentao: {
-      loginUrl: 'http://192.168.0.216:30085/user-login.html'
+      loginUrl: 'http://zentao.test/user-login.html'
     }
   });
 
-  assert.equal(url, 'http://192.168.0.216:30085/my-work-task.html');
+  assert.equal(url, 'http://zentao.test/my-work-task.html');
 });
 
 test('supports configured absolute task page URL', () => {
   const url = getTaskPageUrl({
     zentao: {
-      loginUrl: 'http://192.168.0.216:30085/user-login.html',
+      loginUrl: 'http://zentao.test/user-login.html',
       taskPageUrl: 'http://example.test/tasks.html'
     }
   });
@@ -36,11 +39,18 @@ test('supports configured absolute task page URL', () => {
 test('builds Zentao REST token URL from login URL', () => {
   const url = getZentaoTokenUrl({
     zentao: {
-      loginUrl: 'http://192.168.0.216:30085/user-login.html'
+      loginUrl: 'http://zentao.test/user-login.html'
     }
   });
 
-  assert.equal(url, 'http://192.168.0.216:30085/api.php/v1/tokens');
+  assert.equal(url, 'http://zentao.test/api.php/v1/tokens');
+});
+
+test('builds Zentao task detail URL from login URL', () => {
+  assert.equal(
+    getZentaoTaskUrl({ zentao: { loginUrl: 'http://zentao.test/user-login.html' } }, '28670'),
+    'http://zentao.test/api.php/v1/tasks/28670'
+  );
 });
 
 test('status check reports missing Zentao address without probing network', async () => {
@@ -117,6 +127,23 @@ test('builds effort form payload for task logs', () => {
   assert.equal(payload.get('work[2]'), 'C');
   assert.equal(payload.get('consumed[2]'), '2');
   assert.equal(payload.get('left[2]'), '0');
+});
+
+test('calculates remaining task hours cumulatively', () => {
+  assert.deepEqual(calculateRemainingHours([
+    { date: '2026-07-06', hours: 3, left: 20 },
+    { date: '2026-07-07', hours: 2, left: 20 },
+    { date: '2026-07-08', hours: 30, left: 20 }
+  ]).map((entry) => entry.left), ['17', '15', '0']);
+});
+
+test('calculates task remaining from estimate and total consumed', () => {
+  const initialRemaining = calculateTaskRemaining('1000', '135');
+  assert.equal(initialRemaining, 865);
+  assert.deepEqual(calculateRemainingHours([
+    { date: '2026-07-06', hours: 8, left: 0 },
+    { date: '2026-07-07', hours: 4, left: 0 }
+  ], initialRemaining).map((entry) => entry.left), ['857', '853']);
 });
 
 test('groups preview entries by selected task', () => {

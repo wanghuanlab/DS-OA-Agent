@@ -5,10 +5,11 @@
     "openBrowserOnStart": true
   },
   "zentao": {
-    "loginUrl": "http://192.168.0.216:30085/user-login.html",
+    "loginUrl": "",
     "username": "",
     "password": "",
-    "taskPageUrl": "http://192.168.0.216:30085/my-work-task.html",
+    "taskPageUrl": "",
+    "taskId": "",
     "taskName": ""
   },
   "llm": {
@@ -24,13 +25,15 @@
       "weekendBehavior": "mondayToFriday"
     },
     "code": {
-      "type": "git",
-      "repositories": []
+      "type": "auto",
+      "repositories": [],
+      "authors": []
     },
     "hg": {
       "repositories": []
     },
-    "longText": ""
+    "longText": "",
+    "supplements": []
   },
   "schedule": {
     "enabled": true,

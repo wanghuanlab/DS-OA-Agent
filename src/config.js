@@ -1,22 +1,23 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { dataPath } from './runtime-paths.js';
 
 export const CONFIG_PATH = 'config/config.json';
 
 export const DEFAULT_CONFIG = {
   server: { host: '127.0.0.1', port: 5173, openBrowserOnStart: true },
   zentao: {
-    loginUrl: 'http://192.168.0.216:30085/user-login.html',
+    loginUrl: '',
     username: '',
     password: '',
-    taskPageUrl: 'http://192.168.0.216:30085/my-work-task.html',
+    taskPageUrl: '',
     taskId: '',
     taskName: ''
   },
   llm: {
-    baseUrl: 'https://api.openai.com/v1',
+    baseUrl: 'https://api.deepseek.com',
     apiKey: '',
-    model: 'gpt-4.1-mini',
+    model: 'deepseek-v4-flash',
     temperature: 0.2
   },
   report: {
@@ -55,7 +56,7 @@ export function normalizeConfig(config) {
   return mergeConfig(DEFAULT_CONFIG, config);
 }
 
-export async function loadConfig(path = CONFIG_PATH) {
+export async function loadConfig(path = dataPath(CONFIG_PATH)) {
   try {
     const raw = await readFile(path, 'utf8');
     return normalizeConfig(JSON.parse(raw));
@@ -66,7 +67,7 @@ export async function loadConfig(path = CONFIG_PATH) {
   }
 }
 
-export async function saveConfig(config, path = CONFIG_PATH) {
+export async function saveConfig(config, path = dataPath(CONFIG_PATH)) {
   await mkdir(dirname(path), { recursive: true });
   const normalized = normalizeConfig(config);
   await writeFile(path, `${JSON.stringify(normalized, null, 2)}\n`);

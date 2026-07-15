@@ -5,7 +5,13 @@ import { generatePreview } from './generator.js';
 import { loadPreview, savePreview } from './preview-store.js';
 import { submitToZentao } from './zentao.js';
 
-export function startScheduler({ config, baseUrl, onStatus = console.log }) {
+export function startScheduler({
+  config,
+  baseUrl,
+  onStatus = console.log,
+  openApp = () => open(baseUrl),
+  getConfig = async () => config
+}) {
   if (!config.schedule?.enabled) return [];
   const timezone = config.schedule.timezone || 'Asia/Shanghai';
   const jobs = [];
@@ -14,10 +20,12 @@ export function startScheduler({ config, baseUrl, onStatus = console.log }) {
     config.schedule.previewCron,
     async () => {
       try {
-        const period = getDefaultPeriod(new Date(), timezone);
-        const preview = await generatePreview(config, { period });
+        const currentConfig = await getConfig();
+        if (!currentConfig.schedule?.enabled) return;
+        const period = getDefaultPeriod(new Date(), currentConfig.schedule?.timezone ?? timezone);
+        const preview = await generatePreview(currentConfig, { period });
         await savePreview(preview);
-        await open(baseUrl);
+        await openApp();
         onStatus('Scheduled preview generated.');
       } catch (error) {
         onStatus(`Scheduled preview failed: ${error.message}`);
@@ -30,9 +38,11 @@ export function startScheduler({ config, baseUrl, onStatus = console.log }) {
     config.schedule.autoSubmitCron,
     async () => {
       try {
+        const currentConfig = await getConfig();
+        if (!currentConfig.schedule?.enabled) return;
         const preview = await loadPreview();
         if (!preview) throw new Error('No preview exists for scheduled submit.');
-        await submitToZentao(config, preview);
+        await submitToZentao(currentConfig, preview);
         onStatus('Scheduled submit completed.');
       } catch (error) {
         onStatus(`Scheduled submit failed: ${error.message}`);
