@@ -1,90 +1,66 @@
 # Zentao Log Agent Design
 
-## Goal
+## v1.0.2 Goal
 
-Build a personal local Agent that helps each user generate, preview, edit, and automatically submit Zentao work logs with Playwright.
+Build a local desktop client that turns Git, Mercurial, and Subversion commit history into editable Chinese work logs and submits confirmed entries to Zentao without requiring the user to open the Zentao website.
 
-## User Model
+## Product Principles
 
-Each user runs the Agent on their own computer. There is no shared multi-user server. All user-specific values are stored in local JSON files, including Zentao credentials, LLM configuration, report defaults, schedule settings, and source preferences.
+- **Evidence-based summaries:** derive work descriptions from version-control commits within the selected date range and author set.
+- **One local workflow:** detect Zentao connectivity, retrieve tasks, generate a preview, and submit logs from the desktop client.
+- **User confirmation:** all generated entries remain editable and are submitted only after an explicit user action.
+- **Local-first configuration:** credentials, LLM settings, repository paths, task associations, and previews stay in the current user's local data directory.
 
 ## Runtime Flow
 
-The Agent starts a local web console and opens it in a browser. The user can enter or edit:
+1. The app starts a Fastify service on `127.0.0.1` and displays the UI in an Electron window.
+2. The status action checks whether the Zentao address is reachable, logs in when credentials are available, and retrieves the current user's task list.
+3. The user selects a date range and one or more local repositories. Repository type is detected automatically; ordinary directories are ignored.
+4. The app reads commits from selected authors and asks the configured LLM to summarize them by date and associated task.
+5. The preview supports multiple entries per date. The user can edit each task, work description, and duration before submission.
+6. The app submits confirmed entries through Zentao's HTTP form endpoint and calculates remaining task hours from the estimate and accumulated consumption.
 
-- Zentao login URL, username, and password.
-- LLM base URL, API key, model, and request settings.
-- Report date range.
-- Report source: code repository summary or long text input.
-- Git, HG, SVN repository paths or long text content.
+There is no scheduled generation or automatic submission in v1.0.2.
 
-The Agent generates a per-day preview, lets the user edit it, and then uses Playwright to log in to Zentao and fill the logs.
+## Supported Repositories
 
-## Schedule
+- Git through the local `git` command.
+- Mercurial through the local `hg` command.
+- Subversion through the local `svn` command.
 
-The default weekly automation runs in the `Asia/Shanghai` timezone:
-
-- Every Friday at 16:00: generate the preview and open the local console.
-- Every Friday at 17:00: automatically submit the current preview to Zentao.
-- The confirmation window is 60 minutes.
-
-If preview generation fails, required config is missing, or no preview exists at 17:00, the Agent does not submit.
+Repository configuration stores the path, associated Zentao task, and selected commit authors. The most recent selections are restored on the next launch.
 
 ## Default Period
 
-The default period is Monday through today. If today is Saturday or Sunday, the period is Monday through Friday. During the Friday scheduled run, the default period is Monday through Friday.
+The default period is Monday through today. On Saturday or Sunday, the end date is the preceding Friday.
 
-## Sources
+## Configuration And Privacy
 
-### Code Repository Summary
+All user-specific configuration is JSON. Desktop builds store it under the operating system's per-user application data directory; Web mode uses the ignored `config/config.json` file.
 
-The user selects Git, HG, or SVN and provides one or more local repository directories. The Agent reads commits in the selected date range, groups them by day, and asks the configured LLM to summarize each day in Chinese.
+The stored data includes:
 
-If a day has no matching commits, the preview marks that day as empty so the user can edit it.
+- Zentao address and credentials.
+- LLM Base URL, API Key, and model.
+- Repository paths, task associations, and selected authors.
+- The latest editable preview.
 
-### Long Text Input
+Secrets must not be logged or committed. The app sends credentials only to the configured Zentao service and sends the minimum commit information needed for summarization to the user-configured LLM service.
 
-The user enters a long natural-language work description. The Agent asks the LLM to split it into dated Chinese work-log entries that fit the selected date range.
+## v1.0.2 Scope
 
-## Configuration
-
-All configuration is stored in JSON. The first version uses a single file:
-
-`config/config.json`
-
-The Agent creates this file from defaults when it is missing. The file includes:
-
-- `zentao`
-- `llm`
-- `report`
-- `schedule`
-- `automation`
-
-## Automation Safety
-
-The Agent stores a preview snapshot before submission. At 17:00 it submits the latest preview, including any edits made by the user during the confirmation window.
-
-Passwords and API keys are stored in local JSON because the user explicitly requested JSON-only configuration. The console should avoid logging secrets.
-
-## Implementation Scope
-
-First version includes:
-
-- Local Node.js service.
-- Local browser console.
-- JSON config read and write.
-- Default period calculation.
-- Git, HG, and SVN log extraction.
-- LLM summary and long-text parsing.
-- Preview storage and editing.
-- Friday 16:00 preview generation.
-- Friday 17:00 automatic Zentao filling.
-- Playwright browser automation.
-- Execution logs and screenshots under `output/playwright/`.
+- Electron clients for macOS and Windows.
+- Three-step preparation, preview, and submission workspace.
+- Git, HG, and SVN auto-detection and commit extraction.
+- LLM-generated Chinese work summaries.
+- Multiple task entries per date.
+- Zentao status detection, task retrieval, and HTTP form submission.
+- Automatic remaining-hours calculation.
+- JSON-only local configuration with automatic saving.
 
 Out of scope:
 
 - Multi-user server deployment.
-- Database.
+- Scheduled or unattended submission.
+- Cloud-side configuration storage.
 - Encrypted credential vault.
-- Cloud scheduling.

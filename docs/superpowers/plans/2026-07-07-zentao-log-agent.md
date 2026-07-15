@@ -1,5 +1,7 @@
 # Zentao Log Agent Implementation Plan
 
+> Historical plan for the initial prototype. The current v1.0.2 architecture is documented in `docs/superpowers/specs/2026-07-07-zentao-log-agent-design.md`; long-text input, scheduled execution, and Playwright-based Zentao submission described below are no longer part of the product.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a local Node.js and Playwright Agent that generates, previews, edits, and submits Zentao work logs from Git, HG, SVN commits or long text.

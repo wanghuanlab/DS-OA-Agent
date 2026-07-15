@@ -3,85 +3,194 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>禅道日志 Agent</title>
+    <meta name="theme-color" content="#ffffff">
+    <title>Zentao Log Agent</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <main class="shell">
-      <header>
-        <div>
-          <h1>禅道日志 Agent</h1>
-          <div class="health" aria-label="禅道状态">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <img src="/assets/logo.png" alt="" width="36" height="36">
+          <div>
+            <strong>Zentao Log Agent</strong>
+            <span>本地工作日志助手</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="health" aria-label="禅道连接状态">
             <span id="vpnStatus" class="health-pill unknown">VPN：未检测</span>
             <span id="loginStatus" class="health-pill unknown">登录：未检测</span>
             <span id="taskStatus" class="health-pill unknown">任务：未检测</span>
           </div>
-        </div>
-        <div class="header-actions">
-          <button id="checkStatus" type="button">状态检测与更新</button>
+          <button id="checkStatus" class="button secondary compact" type="button">刷新状态</button>
+          <button id="openSettings" class="button quiet compact" type="button">设置</button>
         </div>
       </header>
 
-      <section class="grid">
-        <div class="panel">
-          <h2>禅道</h2>
-          <label>登录地址<input id="zentaoLoginUrl"></label>
-          <label>用户名<input id="zentaoUsername"></label>
-          <label>密码<input id="zentaoPassword" type="password"></label>
-          <label>任务页地址<input id="zentaoTaskPageUrl"></label>
-        </div>
+      <div id="workspaceView">
+        <nav class="workflow" aria-label="日志填报步骤">
+          <button class="workflow-step active" type="button" data-step="1">
+            <span class="step-index">1</span>
+            <span><strong>准备工作</strong><small>选择时间、代码库、任务与提交人</small></span>
+          </button>
+          <span class="step-line" aria-hidden="true"></span>
+          <button class="workflow-step" type="button" data-step="2">
+            <span class="step-index">2</span>
+            <span><strong>确认预览</strong><small>查看并编辑本周工作日志</small></span>
+          </button>
+          <span class="step-line" aria-hidden="true"></span>
+          <button class="workflow-step" type="button" data-step="3">
+            <span class="step-index">3</span>
+            <span><strong>录入禅道</strong><small>确认内容并执行录入</small></span>
+          </button>
+        </nav>
 
-        <div class="panel">
-          <h2>LLM</h2>
-          <label>Base URL<input id="llmBaseUrl"></label>
-          <label>API Key<input id="llmApiKey" type="password"></label>
-          <label>模型<input id="llmModel"></label>
-        </div>
-      </section>
+        <main class="main-content">
+          <section id="preparePanel" class="step-panel" data-step-panel="1">
+            <div class="work-surface">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">第 1 步</p>
+                  <h1>准备本周工作</h1>
+                  <p>选择填报范围，关联代码库、禅道任务和提交人。</p>
+                </div>
+                <div class="period-fields">
+                  <label>开始日期<input id="startDate" type="date"></label>
+                  <span>至</span>
+                  <label>结束日期<input id="endDate" type="date"></label>
+                </div>
+              </div>
 
-      <section class="panel">
-        <h2>填报设置</h2>
-        <h3>选择日期</h3>
-        <div class="row">
-          <label>开始日期<input id="startDate" type="date"></label>
-          <label>结束日期<input id="endDate" type="date"></label>
-        </div>
-        <h3>选择代码库目录</h3>
-        <div class="repo-tools">
-          <label>代码库目录<input id="repositoryPath" placeholder="输入或粘贴本机代码库目录"></label>
-          <input id="directoryPicker" type="file" webkitdirectory directory hidden>
-          <button id="chooseDirectory" type="button">选择文件夹</button>
-          <button id="addRepository" type="button">添加</button>
-          <button id="checkRepositories" type="button">检查代码库</button>
-        </div>
-        <div id="repositoryList" class="repo-list"></div>
-        <label>提交人
-          <select id="commitAuthors"></select>
-        </label>
-        <div class="actions">
-          <button id="generate">生成预览</button>
-          <button id="savePreview">保存预览</button>
-          <button id="submitNow">立即录入禅道</button>
-        </div>
-      </section>
+              <div class="source-picker">
+                <label>代码库目录
+                  <span class="input-action">
+                    <input id="repositoryPath" placeholder="输入、粘贴或选择本机目录">
+                    <button id="chooseDirectory" class="button secondary" type="button">选择文件夹</button>
+                  </span>
+                </label>
+                <input id="directoryPicker" type="file" webkitdirectory directory hidden>
+                <button id="addRepository" class="button secondary" type="button">添加目录</button>
+                <button id="checkRepositories" class="button secondary" type="button">检查代码库</button>
+              </div>
 
-      <section class="panel">
-        <h2>预览</h2>
-        <div id="status" class="status">正在加载...</div>
-        <div id="preview"></div>
-      </section>
-    </main>
+              <div class="repository-section">
+                <div class="subsection-heading">
+                  <div>
+                    <h2>代码库与任务设置</h2>
+                    <p id="repositoryCount">尚未添加代码库</p>
+                  </div>
+                </div>
+                <div class="repo-table-head" aria-hidden="true">
+                  <span>代码库路径</span><span>关联任务</span><span>操作</span>
+                </div>
+                <div id="repositoryList" class="repo-list"></div>
+              </div>
+
+              <div class="author-section">
+                <label>提交人
+                  <select id="commitAuthors"></select>
+                </label>
+                <p>检查代码库后选择需要汇总的提交人，可保留上次选择。</p>
+              </div>
+
+              <div id="status" class="feedback info" role="status" aria-live="polite">正在加载配置...</div>
+
+              <div class="surface-footer">
+                <div id="readinessSummary" class="readiness">
+                  <strong>等待准备</strong>
+                  <span>请选择填报日期并添加代码库。</span>
+                </div>
+                <button id="generate" class="button primary action-button" type="button">继续生成预览</button>
+              </div>
+            </div>
+
+          </section>
+
+          <section id="previewPanel" class="step-panel" data-step-panel="2" hidden>
+            <div class="panel-toolbar">
+              <div>
+                <p class="eyebrow">第 2 步</p>
+                <h1>确认日志预览</h1>
+                <p id="previewMeta">检查任务、工作描述和耗时后继续。</p>
+              </div>
+              <button id="backToPrepare" class="button quiet" type="button">返回调整来源</button>
+            </div>
+            <div class="preview-surface">
+              <div id="preview"></div>
+            </div>
+            <div class="sticky-actions">
+              <div id="previewTotal" class="summary-total">本周合计：0 小时</div>
+              <button id="savePreview" class="button secondary" type="button">保存预览</button>
+              <button id="reviewSubmit" class="button primary" type="button">继续录入确认</button>
+            </div>
+          </section>
+
+          <section id="submitPanel" class="step-panel" data-step-panel="3" hidden>
+            <div class="confirmation-surface">
+              <p class="eyebrow">第 3 步</p>
+              <h1>确认录入禅道</h1>
+              <p>日志将通过当前登录账号写入所选任务。录入前请核对下面的汇总。</p>
+              <div id="submissionSummary" class="submission-summary"></div>
+              <div class="confirmation-actions">
+                <button id="backToPreview" class="button quiet" type="button">返回预览</button>
+                <button id="submitNow" class="button primary action-button" type="button">立即录入禅道</button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <main id="settingsView" class="settings-view" hidden>
+        <div class="settings-header">
+          <div>
+            <p class="eyebrow">应用设置</p>
+            <h1>连接与模型</h1>
+            <p>修改后会自动保存到当前电脑，不会进入项目仓库。</p>
+          </div>
+          <button id="closeSettings" class="button quiet" type="button">返回工作台</button>
+        </div>
+        <div class="settings-surface">
+          <section class="settings-section">
+            <div>
+              <h2>禅道连接</h2>
+              <p>用于检测 VPN、登录并获取当前账号的任务列表。</p>
+            </div>
+            <div class="settings-fields">
+              <label>登录地址<input id="zentaoLoginUrl"></label>
+              <label>任务页地址<input id="zentaoTaskPageUrl"></label>
+              <label>用户名<input id="zentaoUsername" autocomplete="username"></label>
+              <label>密码<input id="zentaoPassword" type="password" autocomplete="current-password"></label>
+            </div>
+          </section>
+          <section class="settings-section">
+            <div>
+              <h2>LLM 配置</h2>
+              <p>用于理解提交记录并生成中文工作描述。</p>
+            </div>
+            <div class="settings-fields">
+              <label>Base URL<input id="llmBaseUrl"></label>
+              <label>模型<input id="llmModel"></label>
+              <label class="field-span">API Key<input id="llmApiKey" type="password" autocomplete="off"></label>
+            </div>
+          </section>
+        </div>
+        <div id="settingsSaveState" class="settings-save-state" role="status">所有修改都会自动保存</div>
+      </main>
+    </div>
+
     <div id="directoryBrowser" class="modal" hidden>
-      <div class="modal-body">
+      <div class="modal-body" role="dialog" aria-modal="true" aria-labelledby="directoryBrowserTitle">
         <div class="modal-head">
-          <strong>选择代码库目录</strong>
-          <button id="closeDirectoryBrowser" type="button">关闭</button>
+          <strong id="directoryBrowserTitle">选择代码库目录</strong>
+          <button id="closeDirectoryBrowser" class="button quiet compact" type="button">关闭</button>
         </div>
         <div id="directoryRoots" class="directory-roots" aria-label="可用磁盘和根目录"></div>
         <div id="directoryCurrent" class="directory-current"></div>
         <div class="directory-actions">
-          <button id="directoryParent" type="button">上一级</button>
-          <button id="selectDirectory" type="button">选择当前目录</button>
+          <button id="directoryParent" class="button secondary" type="button">上一级</button>
+          <button id="selectDirectory" class="button primary" type="button">选择当前目录</button>
         </div>
         <div id="directoryList" class="directory-list"></div>
       </div>

@@ -39,11 +39,15 @@ img { display: block; max-width: 100%; }
   border-bottom: 1px solid rgba(255,255,255,0.25);
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: "DIN Alternate", "Arial Narrow", sans-serif;
   font-size: 1.1rem;
   font-weight: 800;
   text-decoration: none;
 }
+.brand img { width: 34px; height: 34px; }
 nav { display: flex; align-items: center; gap: 30px; }
 nav a { font-size: 0.9rem; text-decoration: none; }
 .nav-download { border: 1px solid rgba(255,255,255,0.65); padding: 8px 16px; }
@@ -77,6 +81,7 @@ nav a { font-size: 0.9rem; text-decoration: none; }
   width: min(720px, 90vw);
   padding: 150px 5vw 130px;
 }
+.hero-logo { width: 76px; height: 76px; margin-bottom: 26px; }
 .eyebrow {
   margin: 0 0 14px;
   color: var(--accent);
@@ -216,18 +221,6 @@ footer {
   color: #e6ebf2;
 }
 footer a { color: #9fc3f8; }
-.toast {
-  position: fixed;
-  z-index: 30;
-  right: 24px;
-  bottom: 24px;
-  max-width: min(360px, calc(100vw - 48px));
-  padding: 14px 18px;
-  background: #151a21;
-  color: #fff;
-  box-shadow: var(--shadow);
-}
-
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity 600ms ease, transform 600ms ease; }
 .reveal.is-visible { opacity: 1; transform: none; }
 
@@ -238,6 +231,7 @@ footer a { color: #9fc3f8; }
   .hero > img { object-position: 57% center; }
   .hero-shade { background: rgba(10,17,28,0.78); }
   .hero-content { padding: 130px 5vw 140px; }
+  .hero-logo { width: 64px; height: 64px; margin-bottom: 22px; }
   h1 { font-size: clamp(3.2rem, 18vw, 5.6rem); overflow-wrap: anywhere; }
   .hero-proof { left: 5vw; right: auto; bottom: 30px; gap: 12px; flex-wrap: wrap; }
   .intro, .workflow, .download { grid-template-columns: 1fr; }

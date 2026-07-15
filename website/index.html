@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Zentao Log Agent 将 Git、HG、SVN 提交和附加描述整理成可确认的禅道工作日志，并在本机自动完成录入。">
+  <meta name="description" content="Zentao Log Agent 自动总结 Git、HG、SVN 提交记录。连接 VPN 后无需打开禅道，即可在本地安全完成工作日志填报。">
   <meta name="theme-color" content="#f4f6f8">
   <meta property="og:title" content="Zentao Log Agent">
-  <meta property="og:description" content="从代码提交到禅道日志，一次预览，按时录入。">
-  <meta property="og:image" content="assets/workflow-visual.png">
+  <meta property="og:description" content="自动总结代码提交，连接 VPN 后无需打开禅道，三步完成工作日志填报。">
+  <meta property="og:image" content="assets/logo.png">
   <title>Zentao Log Agent | 本地禅道日志助手</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="返回顶部">Zentao Log Agent</a>
+    <a class="brand" href="#top" aria-label="返回顶部"><img src="assets/logo.png" alt="" width="34" height="34"><span>Zentao Log Agent</span></a>
     <nav aria-label="主导航">
       <a href="#highlights">亮点</a>
       <a href="#workflow">使用方式</a>
@@ -24,21 +24,22 @@
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
-      <img src="assets/app-workspace.png" alt="Zentao Log Agent 配置与代码库工作台实拍" width="1440" height="1040">
+      <img src="assets/app-workspace.png" alt="Zentao Log Agent 配置与代码库工作台实拍" width="1440" height="1024">
       <div class="hero-shade"></div>
       <div class="hero-content reveal">
-        <p class="eyebrow">为开发者准备的本地工作日志助手</p>
+        <img class="hero-logo" src="assets/logo.png" alt="Zentao Log Agent 标志" width="76" height="76">
+        <p class="eyebrow">v1.0.2 · 本地禅道日志助手</p>
         <h1 id="hero-title">Zentao Log Agent</h1>
-        <p class="hero-copy">把 Git、HG、SVN 提交与附加描述整理成中文工作日志。你负责确认，它负责按时录入禅道。</p>
+        <p class="hero-copy">自动检测代码提交并总结工作内容。连接 VPN 后，无需打开禅道网页，就能完成预览与日志填报。</p>
         <div class="hero-actions">
           <a class="button primary" href="#download">选择下载版本</a>
           <a class="button secondary" href="#workflow">查看使用方式</a>
         </div>
       </div>
       <div class="hero-proof" aria-label="核心能力">
-        <span>本地运行</span>
-        <span>提交记录总结</span>
-        <span>可编辑预览</span>
+        <span>Git · HG · SVN</span>
+        <span>VPN 直连填报</span>
+        <span>配置仅存本地</span>
       </div>
     </section>
 
@@ -47,32 +48,37 @@
         <p class="eyebrow">少做重复录入</p>
         <h2>工作已经做过一次，不必再回忆一次</h2>
       </div>
-      <p class="intro-copy">Agent 在你的电脑上读取版本库提交，结合每个代码库的附加描述和任务关联，生成按日期拆分的日志预览。提交前，每一天都能继续增删任务、调整描述与耗时。</p>
+      <p class="intro-copy">从代码库读取真实工作轨迹，用 LLM 整理成中文日志，再通过禅道 HTTP 接口直接录入。整个流程都在一个本地客户端内完成。</p>
     </section>
 
     <section class="feature-grid band" aria-label="产品亮点">
-      <article class="feature feature-wide reveal">
+      <article class="feature reveal">
         <p class="feature-index">01</p>
-        <h3>多版本库，自动识别</h3>
-        <p>选择目录即可检查 Git、HG 或 SVN，无需先指定类型。普通目录会被安静忽略。</p>
+        <h3>自动检测提交，生成工作总结</h3>
+        <p>自动识别 Git、HG 或 SVN，按日期和提交人读取记录，再生成简洁的中文工作描述。</p>
         <div class="repo-strip" aria-label="支持的版本控制系统">
           <span>Git</span><span>Mercurial</span><span>Subversion</span>
         </div>
       </article>
-      <article class="feature reveal">
+      <article class="feature feature-dark reveal">
         <p class="feature-index">02</p>
-        <h3>每个代码库关联任务</h3>
-        <p>保留上次选择的提交人与任务映射，多项目并行时无需反复配置。</p>
+        <h3>无需打开禅道，VPN 连接即可填报</h3>
+        <p>自动完成状态检测、登录和任务获取。确认预览后，通过 HTTP 接口直接录入禅道。</p>
       </article>
       <article class="feature reveal">
         <p class="feature-index">03</p>
+        <h3>本地优先，配置透明可控</h3>
+        <p>源代码公开可审查。账号、Key、代码库和任务配置只保存在当前用户的本地 JSON。</p>
+      </article>
+      <article class="feature feature-wide reveal">
+        <p class="feature-index">04</p>
+        <h3>一周多任务，预览后再提交</h3>
+        <p>代码库保留任务关联和提交人；同一日期可添加多条任务，工作描述与耗时都能在提交前调整。</p>
+      </article>
+      <article class="feature reveal">
+        <p class="feature-index">05</p>
         <h3>剩余工时自动续算</h3>
         <p>录入时根据任务初始预计、累计消耗和本次耗时计算预计剩余。</p>
-      </article>
-      <article class="feature feature-dark reveal">
-        <p class="feature-index">04</p>
-        <h3>配置留在本机</h3>
-        <p>禅道和 LLM 设置保存在当前用户的数据目录，项目仓库不收录个人配置文件。</p>
       </article>
     </section>
 
@@ -83,7 +89,7 @@
         <p>日期、任务、工作描述和耗时都能直接编辑。任务剩余时间同时展示，工作拆分更直观。</p>
       </div>
       <figure>
-        <img src="assets/app-preview.png" alt="同一日期包含多条任务、描述和耗时的日志预览界面" width="1440" height="1040" loading="lazy">
+        <img src="assets/app-preview.png" alt="同一日期包含多条任务、描述和耗时的日志预览界面" width="1440" height="1024" loading="lazy">
         <figcaption>真实产品界面，示例数据已脱敏</figcaption>
       </figure>
     </section>
@@ -96,9 +102,9 @@
         <p class="eyebrow">三步完成一周日志</p>
         <h2>从本地提交到禅道</h2>
         <ol>
-          <li><strong>连接</strong><span>填写禅道和 LLM 配置，选择本机代码库与提交人。</span></li>
-          <li><strong>确认</strong><span>生成中文预览，按日期补充任务、描述和实际耗时。</span></li>
-          <li><strong>录入</strong><span>立即提交，或让客户端在周五 16:00 生成预览、17:00 自动执行。</span></li>
+          <li><strong>准备</strong><span>在独立设置页连接禅道和 LLM，再选择日期、代码库、任务与提交人。</span></li>
+          <li><strong>预览</strong><span>生成中文日志，同一日期可继续添加多项任务、描述和实际耗时。</span></li>
+          <li><strong>录入</strong><span>核对周期、任务数和总耗时后立即提交。</span></li>
         </ol>
       </div>
     </section>
@@ -110,17 +116,17 @@
         <p>macOS 支持 Apple Silicon 与 Intel，Windows 提供安装版。首次运行后，配置会自动保存在当前用户目录。</p>
       </div>
       <div class="download-options reveal">
-        <a class="download-row" href="#" data-download="mac-arm64">
+        <a class="download-row" href="https://github.com/wanghuanlab/DS-OA-Agent/releases/tag/v1.0.2" data-download="mac-arm64">
           <span><strong>macOS</strong><small>Apple Silicon</small></span><b>下载</b>
         </a>
-        <a class="download-row" href="#" data-download="mac-x64">
+        <a class="download-row" href="https://github.com/wanghuanlab/DS-OA-Agent/releases/tag/v1.0.2" data-download="mac-x64">
           <span><strong>macOS</strong><small>Intel</small></span><b>下载</b>
         </a>
-        <a class="download-row" href="#" data-download="windows">
+        <a class="download-row" href="https://github.com/wanghuanlab/DS-OA-Agent/releases/tag/v1.0.2" data-download="windows">
           <span><strong>Windows</strong><small>64 位安装版</small></span><b>下载</b>
         </a>
       </div>
-      <p class="download-note">下载地址将在安装包正式托管后替换。</p>
+      <p class="download-note">进入 v1.0.2 发布页后，选择与电脑平台对应的安装包。</p>
     </section>
   </main>
 
@@ -129,7 +135,6 @@
     <a href="https://github.com/wanghuanlab/DS-OA-Agent">GitHub 项目</a>
   </footer>
 
-  <div class="toast" id="downloadToast" role="status" aria-live="polite" hidden>下载链接即将开放。</div>
   <script src="app.js"></script>
 </body>
 </html>

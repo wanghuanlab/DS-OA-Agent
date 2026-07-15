@@ -2,17 +2,17 @@ import { app, BrowserWindow, Menu, nativeImage, shell, Tray } from 'electron';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { configureRuntimePaths } from '../src/runtime-paths.js';
-import { loadConfig } from '../src/config.js';
 
 const desktopDirectory = dirname(fileURLToPath(import.meta.url));
 const applicationDirectory = join(desktopDirectory, '..');
+const assetDirectory = join(applicationDirectory, 'public', 'assets');
+const applicationIconPath = join(assetDirectory, 'logo.png');
 
 app.setName('Zentao Log Agent');
 
 let mainWindow;
 let tray;
 let server;
-let schedulerJobs = [];
 let quitting = false;
 let baseUrl = '';
 
@@ -31,6 +31,7 @@ function createMainWindow() {
     minHeight: 650,
     show: false,
     title: '禅道日志 Agent',
+    icon: applicationIconPath,
     backgroundColor: '#f4f6f8',
     webPreferences: {
       nodeIntegration: false,
@@ -57,8 +58,10 @@ function createMainWindow() {
 }
 
 function createTray() {
-  const traySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" rx="3" fill="#111"/><path d="M6 6h8v2H6zm0 4h5v2H6zm0 4h8v2H6z" fill="#fff"/></svg>`;
-  const icon = nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(traySvg).toString('base64')}`);
+  const icon = nativeImage.createFromPath(join(
+    assetDirectory,
+    process.platform === 'darwin' ? 'trayTemplate.png' : 'tray.png'
+  ));
   if (process.platform === 'darwin') icon.setTemplateImage(true);
   tray = new Tray(icon);
   tray.setToolTip('禅道日志 Agent');
@@ -71,6 +74,7 @@ function createTray() {
 }
 
 async function startApplication() {
+  if (process.platform === 'darwin') app.dock?.setIcon(applicationIconPath);
   const extraExecutablePaths = process.platform === 'darwin'
     ? ['/opt/homebrew/bin', '/usr/local/bin']
     : process.platform === 'win32'
@@ -92,11 +96,7 @@ async function startApplication() {
     import('./task-provider.js')
   ]);
   setTaskListProvider(listTasksWithElectron);
-  const [{ createServer }, { startScheduler }] = await Promise.all([
-    import('../src/server.js'),
-    import('../src/scheduler.js')
-  ]);
-  const config = await loadConfig();
+  const { createServer } = await import('../src/server.js');
   server = await createServer();
   await server.listen({ host: '127.0.0.1', port: 0 });
   const address = server.server.address();
@@ -105,13 +105,6 @@ async function startApplication() {
 
   createMainWindow();
   createTray();
-  schedulerJobs = startScheduler({
-    config,
-    baseUrl,
-    openApp: showMainWindow,
-    getConfig: loadConfig,
-    onStatus: (message) => console.log(`[scheduler] ${message}`)
-  });
 }
 
 const hasLock = app.requestSingleInstanceLock();
@@ -132,7 +125,6 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   quitting = true;
-  for (const job of schedulerJobs) job.stop();
 });
 
 app.on('will-quit', async (event) => {

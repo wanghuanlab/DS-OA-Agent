@@ -1,6 +1,6 @@
 {
   "name": "ds-oa-agent",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "本地禅道工作日志生成与录入客户端",
   "author": "wanghuanlab",
   "private": true,
@@ -20,7 +20,6 @@
   "dependencies": {
     "@playwright/test": "^1.45.0",
     "fastify": "^4.28.1",
-    "node-cron": "^3.0.3",
     "open": "^10.1.0"
   },
   "devDependencies": {
@@ -32,7 +31,8 @@
     "productName": "Zentao Log Agent",
     "asar": true,
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "files": [
       "desktop/**/*",
@@ -42,11 +42,13 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
       "target": [
         "zip"
       ]
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis",
         "portable"

@@ -28,8 +28,7 @@ export async function createServer() {
   });
 
   app.get('/api/default-period', async () => {
-    const config = await loadConfig();
-    return getDefaultPeriod(new Date(), config.schedule?.timezone ?? 'Asia/Shanghai');
+    return getDefaultPeriod();
   });
 
   app.get('/api/preview', async () => ({ preview: await loadPreview() }));
@@ -41,17 +40,14 @@ export async function createServer() {
 
   app.post('/api/generate-preview', async (request) => {
     const config = normalizeConfig(request.body?.config ?? await loadConfig());
-    const period = request.body?.period ?? getDefaultPeriod(new Date(), config.schedule.timezone);
-    const preview = await generatePreview(config, {
-      period,
-      longText: request.body?.longText
-    });
+    const period = request.body?.period ?? getDefaultPeriod();
+    const preview = await generatePreview(config, { period });
     return { preview: await savePreview(preview) };
   });
 
   app.post('/api/repositories/check', async (request) => {
     const config = normalizeConfig(request.body?.config ?? await loadConfig());
-    const period = request.body?.period ?? getDefaultPeriod(new Date(), config.schedule.timezone);
+    const period = request.body?.period ?? getDefaultPeriod();
     const code = config.report?.code ?? {};
     return {
       result: await inspectCodeRepositories(

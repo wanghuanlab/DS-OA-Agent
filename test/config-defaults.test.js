@@ -24,3 +24,31 @@ test('keeps customized Zentao addresses', () => {
   assert.equal(config.zentao.loginUrl, 'https://zentao.example.com/login');
   assert.equal(config.zentao.taskPageUrl, 'https://zentao.example.com/tasks');
 });
+
+test('removes legacy supplemental description settings', () => {
+  const config = normalizeConfig({
+    report: {
+      longText: '旧补充内容',
+      supplements: [{ content: '旧附加描述' }],
+      code: {
+        repositories: [{ path: '/repo', description: '旧代码库描述' }]
+      }
+    }
+  });
+
+  assert.equal('longText' in config.report, false);
+  assert.equal('supplements' in config.report, false);
+  assert.equal('description' in config.report.code.repositories[0], false);
+});
+
+test('removes legacy scheduled execution settings', () => {
+  const config = normalizeConfig({
+    schedule: { enabled: true, previewCron: '0 16 * * 5' },
+    automation: { autoSubmit: true },
+    llm: { model: 'custom-model' }
+  });
+
+  assert.equal('schedule' in config, false);
+  assert.equal('automation' in config, false);
+  assert.equal(config.llm.model, 'custom-model');
+});

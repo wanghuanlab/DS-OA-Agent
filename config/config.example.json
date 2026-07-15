@@ -31,20 +31,6 @@
     },
     "hg": {
       "repositories": []
-    },
-    "longText": "",
-    "supplements": []
-  },
-  "schedule": {
-    "enabled": true,
-    "timezone": "Asia/Shanghai",
-    "previewCron": "0 16 * * 5",
-    "autoSubmitCron": "0 17 * * 5",
-    "confirmWindowMinutes": 60
-  },
-  "automation": {
-    "autoSubmit": true,
-    "headless": false,
-    "keepBrowserOpenOnError": true
+    }
   }
 }

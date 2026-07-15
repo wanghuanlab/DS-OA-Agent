@@ -26,21 +26,7 @@ export const DEFAULT_CONFIG = {
     defaultSource: 'code',
     period: { type: 'thisWeekToToday', weekendBehavior: 'mondayToFriday' },
     code: { type: 'auto', repositories: [], authors: [] },
-    hg: { repositories: [] },
-    longText: '',
-    supplements: []
-  },
-  schedule: {
-    enabled: true,
-    timezone: 'Asia/Shanghai',
-    previewCron: '0 16 * * 5',
-    autoSubmitCron: '0 17 * * 5',
-    confirmWindowMinutes: 60
-  },
-  automation: {
-    autoSubmit: true,
-    headless: false,
-    keepBrowserOpenOnError: true
+    hg: { repositories: [] }
   }
 };
 
@@ -56,6 +42,15 @@ function mergeConfig(base, override) {
 
 export function normalizeConfig(config) {
   const normalized = mergeConfig(DEFAULT_CONFIG, config);
+  delete normalized.schedule;
+  delete normalized.automation;
+  delete normalized.report.longText;
+  delete normalized.report.supplements;
+  for (const repositoryList of [normalized.report.code?.repositories, normalized.report.hg?.repositories]) {
+    for (const repository of repositoryList ?? []) {
+      if (repository && typeof repository === 'object') delete repository.description;
+    }
+  }
   if (!String(normalized.zentao.loginUrl ?? '').trim()) {
     normalized.zentao.loginUrl = DEFAULT_ZENTAO_LOGIN_URL;
   }

@@ -1,7 +1,6 @@
 import open from 'open';
 import { loadConfig } from './config.js';
 import { createServer } from './server.js';
-import { startScheduler } from './scheduler.js';
 
 const config = await loadConfig();
 const app = await createServer();
@@ -10,7 +9,6 @@ const port = config.server?.port ?? 5173;
 const baseUrl = `http://${host}:${port}`;
 
 await app.listen({ host, port });
-startScheduler({ config, baseUrl, getConfig: loadConfig });
 
 console.log(`Zentao Log Agent running at ${baseUrl}`);
 if (config.server?.openBrowserOnStart) {

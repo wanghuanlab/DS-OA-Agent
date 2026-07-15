@@ -2,42 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   generatePreview,
-  hasPreviewInputs,
   normalizePreview,
-  normalizeRepositoryConfig,
-  normalizeSupplementItems
+  normalizeRepositoryConfig
 } from '../src/generator.js';
 import { collectCommitAuthors, filterCommitsByAuthors } from '../src/vcs.js';
 
 const period = { startDate: '2026-07-06', endDate: '2026-07-10' };
 
-test('preview generation requires code repositories or long text', async () => {
+test('preview generation requires a code repository', async () => {
   const config = {
     report: {
-      code: { type: 'git', repositories: [] },
-      longText: ''
+      code: { type: 'git', repositories: [] }
     }
   };
 
   await assert.rejects(
     () => generatePreview(config, { period }),
-    /请填写代码库目录或长文本工作描述/
+    /请至少添加一个代码库目录/
   );
-});
-
-test('detects available preview inputs from repositories and long text', () => {
-  assert.deepEqual(hasPreviewInputs({ code: { repositories: [] }, longText: '' }), {
-    hasCode: false,
-    hasLongText: false
-  });
-  assert.deepEqual(hasPreviewInputs({ code: { repositories: ['/repo'] }, longText: '' }), {
-    hasCode: true,
-    hasLongText: false
-  });
-  assert.deepEqual(hasPreviewInputs({ code: { repositories: [] }, longText: '今天处理需求' }), {
-    hasCode: false,
-    hasLongText: true
-  });
 });
 
 test('normalizes repository config with task associations', () => {
@@ -45,18 +27,8 @@ test('normalizes repository config with task associations', () => {
     '/repo/a',
     { path: '/repo/b', taskId: '28670', taskName: '原型开发', description: '补充联调' }
   ]), [
-    { path: '/repo/a', taskId: '', taskName: '', description: '' },
-    { path: '/repo/b', taskId: '28670', taskName: '原型开发', description: '补充联调' }
-  ]);
-});
-
-test('normalizes supplement items and preserves task associations', () => {
-  assert.deepEqual(normalizeSupplementItems([
-    { content: '处理接口联调', taskId: '28670', taskName: '接口开发' },
-    { content: '   ' }
-  ], '历史长文本'), [
-    { content: '处理接口联调', taskId: '28670', taskName: '接口开发' },
-    { content: '历史长文本', taskId: '', taskName: '' }
+    { path: '/repo/a', taskId: '', taskName: '' },
+    { path: '/repo/b', taskId: '28670', taskName: '原型开发' }
   ]);
 });
 

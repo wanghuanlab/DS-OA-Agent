@@ -141,8 +141,7 @@ export async function readCodeCommitsByDate(repositoryType, repositories, startD
       .map((commit) => ({
         ...commit,
         taskId: typeof repository === 'string' ? '' : String(repository.taskId ?? ''),
-        taskName: typeof repository === 'string' ? '' : String(repository.taskName ?? ''),
-        repositoryDescription: typeof repository === 'string' ? '' : String(repository.description ?? '')
+        taskName: typeof repository === 'string' ? '' : String(repository.taskName ?? '')
       }));
     for (const commit of commits) {
       grouped[commit.date] ??= [];
