@@ -72,6 +72,26 @@ npm run build:win
 
 安装包输出到 `dist/`。macOS 安装包需要在 macOS 上构建，Windows 安装包建议在 Windows 上构建。推送 `v*` 标签后，GitHub Actions 会为三个目标平台构建安装包并创建 GitHub Release。
 
+## 官网部署
+
+官网部署脚本会构建 `website/`，通过 SSH 上传静态文件，并在服务器端检查完成后切换站点目录：
+
+```bash
+npm run deploy:website
+```
+
+默认目标为 `root@zentao.wanghuanlab.com:/opt/1panel/www/sites/zen/index`。自定义 SSH 用户、端口或私钥：
+
+```bash
+npm run deploy:website -- --user ubuntu --port 2222 --identity ~/.ssh/id_ed25519
+```
+
+仅检查本地构建和部署参数，不连接服务器：
+
+```bash
+npm run deploy:website -- --dry-run
+```
+
 ## 配置与隐私
 
 桌面客户端把配置和预览保存在系统用户数据目录：

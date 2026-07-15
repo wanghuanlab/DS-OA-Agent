@@ -15,7 +15,8 @@
     "build:mac:arm64": "node scripts/build-mac.js --arm64",
     "build:mac:x64": "node scripts/build-mac.js --x64",
     "build:win": "electron-builder --win --x64 --publish never",
-    "build:desktop": "electron-builder --mac --win --publish never"
+    "build:desktop": "electron-builder --mac --win --publish never",
+    "deploy:website": "bash scripts/deploy-website.sh"
   },
   "dependencies": {
     "@playwright/test": "^1.45.0",
