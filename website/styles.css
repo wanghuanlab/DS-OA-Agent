@@ -55,10 +55,8 @@ nav a { font-size: 0.88rem; font-weight: 650; text-decoration: none; }
   display: flex;
   align-items: center;
   color: #fff;
-  background: var(--night);
+  background: #080d15;
 }
-.hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 56% 20%; filter: saturate(.72) contrast(1.05); }
-.hero-veil { position: absolute; inset: 0; background: rgb(7 14 24 / 78%); }
 .particle-canvas { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .hero-content { position: relative; z-index: 3; width: min(760px, 90vw); padding: 130px 5vw 124px; }
 .version-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; color: #b7d2f8; font-size: .78rem; font-weight: 760; }
@@ -157,8 +155,6 @@ footer > a { justify-self: end; color: #8ab7f5; font-weight: 750; text-decoratio
   .brand img { width: 34px; height: 34px; }
   .github-link { min-height: 36px; padding-inline: 12px; }
   .hero { min-height: 88svh; align-items: flex-start; }
-  .hero-image { object-position: 60% center; }
-  .hero-veil { background: rgb(7 14 24 / 84%); }
   .hero-content { width: 100%; padding: 120px 16px 150px; }
   .hero h1 { font-size: clamp(4rem, 20vw, 5.4rem); overflow-wrap: anywhere; }
   .hero-copy { font-size: .98rem; }
