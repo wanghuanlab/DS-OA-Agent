@@ -1,6 +1,6 @@
 {
   "name": "ds-oa-agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "本地禅道工作日志生成与录入客户端",
   "author": "wanghuanlab",
   "private": true,

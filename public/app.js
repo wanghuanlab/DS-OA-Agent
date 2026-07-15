@@ -148,6 +148,21 @@ async function loadDirectories(path = '') {
   currentDirectoryPath = data.currentPath;
   $('directoryCurrent').textContent = data.currentPath;
   $('directoryParent').dataset.path = data.parentPath;
+  const roots = $('directoryRoots');
+  roots.innerHTML = '';
+  const directoryRoots = data.roots ?? [];
+  const currentPath = data.currentPath.toLowerCase();
+  const activeRoot = directoryRoots
+    .filter((directoryRoot) => currentPath.startsWith(directoryRoot.path.toLowerCase()))
+    .sort((left, right) => right.path.length - left.path.length)[0];
+  for (const directoryRoot of directoryRoots) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `directory-root${directoryRoot.path === activeRoot?.path ? ' active' : ''}`;
+    button.dataset.path = directoryRoot.path;
+    button.textContent = directoryRoot.name;
+    roots.append(button);
+  }
   const root = $('directoryList');
   root.innerHTML = '';
   if (data.directories.length === 0) {
@@ -434,6 +449,12 @@ $('closeDirectoryBrowser').addEventListener('click', () => {
 
 $('directoryParent').addEventListener('click', async () => {
   await loadDirectories($('directoryParent').dataset.path);
+});
+
+$('directoryRoots').addEventListener('click', async (event) => {
+  const path = event.target.dataset.path;
+  if (!path) return;
+  await loadDirectories(path);
 });
 
 $('selectDirectory').addEventListener('click', () => {

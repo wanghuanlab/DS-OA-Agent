@@ -3,14 +3,16 @@ import { dirname } from 'node:path';
 import { dataPath } from './runtime-paths.js';
 
 export const CONFIG_PATH = 'config/config.json';
+export const DEFAULT_ZENTAO_LOGIN_URL = 'http://192.168.0.216:30085/user-login.html';
+export const DEFAULT_ZENTAO_TASK_PAGE_URL = 'http://192.168.0.216:30085/my-work-task.html';
 
 export const DEFAULT_CONFIG = {
   server: { host: '127.0.0.1', port: 5173, openBrowserOnStart: true },
   zentao: {
-    loginUrl: '',
+    loginUrl: DEFAULT_ZENTAO_LOGIN_URL,
     username: '',
     password: '',
-    taskPageUrl: '',
+    taskPageUrl: DEFAULT_ZENTAO_TASK_PAGE_URL,
     taskId: '',
     taskName: ''
   },
@@ -53,7 +55,14 @@ function mergeConfig(base, override) {
 }
 
 export function normalizeConfig(config) {
-  return mergeConfig(DEFAULT_CONFIG, config);
+  const normalized = mergeConfig(DEFAULT_CONFIG, config);
+  if (!String(normalized.zentao.loginUrl ?? '').trim()) {
+    normalized.zentao.loginUrl = DEFAULT_ZENTAO_LOGIN_URL;
+  }
+  if (!String(normalized.zentao.taskPageUrl ?? '').trim()) {
+    normalized.zentao.taskPageUrl = DEFAULT_ZENTAO_TASK_PAGE_URL;
+  }
+  return normalized;
 }
 
 export async function loadConfig(path = dataPath(CONFIG_PATH)) {

@@ -9,6 +9,7 @@ import { loadPreview, savePreview } from './preview-store.js';
 import { checkZentaoStatus, listZentaoTasks, submitToZentao } from './zentao.js';
 import { inspectCodeRepositories } from './vcs.js';
 import { staticPath } from './runtime-paths.js';
+import { listDirectoryRoots } from './directory-roots.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -67,10 +68,14 @@ export async function createServer() {
       ? request.query.path
       : homedir();
     const currentPath = resolve(requestedPath);
-    const entries = await readdir(currentPath, { withFileTypes: true });
+    const [entries, roots] = await Promise.all([
+      readdir(currentPath, { withFileTypes: true }),
+      listDirectoryRoots()
+    ]);
     return {
       currentPath,
       parentPath: dirname(currentPath),
+      roots,
       directories: entries
         .filter((entry) => entry.isDirectory())
         .map((entry) => entry.name)

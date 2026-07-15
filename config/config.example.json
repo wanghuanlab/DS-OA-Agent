@@ -5,10 +5,10 @@
     "openBrowserOnStart": true
   },
   "zentao": {
-    "loginUrl": "",
+    "loginUrl": "http://192.168.0.216:30085/user-login.html",
     "username": "",
     "password": "",
-    "taskPageUrl": "",
+    "taskPageUrl": "http://192.168.0.216:30085/my-work-task.html",
     "taskId": "",
     "taskName": ""
   },

@@ -291,6 +291,27 @@ button {
   font-size: 13px;
 }
 
+.directory-roots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.directory-root {
+  min-width: 52px;
+  border: 1px solid #bfdbfe;
+  padding: 7px 11px;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.directory-root.active {
+  border-color: #1f6feb;
+  color: #fff;
+  background: #1f6feb;
+}
+
 .directory-list {
   display: grid;
   gap: 6px;
