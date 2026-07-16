@@ -34,7 +34,7 @@ if (canvas && hero) {
   }
 
   function createParticles() {
-    const count = width < 640 ? 170 : 320;
+    const count = width < 640 ? 170 : width >= 2400 ? 520 : width >= 1800 ? 400 : 320;
     const center = defaultMagnetPosition();
     pointer.x = center.x;
     pointer.y = center.y;
@@ -105,8 +105,17 @@ if (canvas && hero) {
     magnet.y += (pointer.y - magnet.y) * smooth;
     context.clearRect(0, 0, width, height);
 
-    const magnetRadius = Math.min(width < 640 ? width * 0.72 : 410, height * 0.58);
-    const ringRadius = Math.min(width < 640 ? width * 0.25 : 165, height * 0.23);
+    const largeScene = width >= 2400;
+    const mediumScene = width >= 1800;
+    const magnetRadius = Math.min(
+      width < 640 ? width * 0.72 : largeScene ? 620 : mediumScene ? 500 : 410,
+      height * 0.58
+    );
+    const ringRadius = Math.min(
+      width < 640 ? width * 0.25 : largeScene ? 260 : mediumScene ? 205 : 165,
+      height * 0.25
+    );
+    const sceneScale = largeScene ? 1.45 : mediumScene ? 1.2 : 1;
 
     for (const particle of particles) {
       const homeDriftX = Math.sin(elapsed * 0.12 * particle.speed + particle.phase) * 12;
@@ -119,8 +128,8 @@ if (canvas && hero) {
       const angle = Math.atan2(dy, dx);
       const influence = Math.max(0, Math.min(1, 1 - distance / magnetRadius));
       const easedInfluence = influence * influence * (3 - 2 * influence);
-      const wave = Math.sin(elapsed * 1.25 * particle.speed + particle.phase + angle * 2) * 15 * particle.variance;
-      const depth = (particle.z - 0.5) * 26;
+      const wave = Math.sin(elapsed * 1.25 * particle.speed + particle.phase + angle * 2) * 15 * sceneScale * particle.variance;
+      const depth = (particle.z - 0.5) * 26 * sceneScale;
       const currentRadius = ringRadius + wave + depth;
       const ringX = magnet.x + Math.cos(angle) * currentRadius;
       const ringY = magnet.y + Math.sin(angle) * currentRadius * 0.82;
@@ -140,7 +149,7 @@ if (canvas && hero) {
       const pulse = reduceMotion.matches ? 1 : 0.86 + Math.sin(elapsed * 3 + particle.phase) * 0.14;
       const scale = (0.45 + ringEnergy * 0.9) * pulse;
       const alpha = Math.min(0.92, 0.18 + ringEnergy * 0.72);
-      drawCapsule(particle, angle + Math.PI / 2, scale, alpha);
+      drawCapsule(particle, angle + Math.PI / 2, scale * sceneScale, alpha);
     }
   }
 
