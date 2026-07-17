@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Zentao Log Agent 操作手册：配置云之家个人考勤 URL，自动读取打卡流水并计算每日工时。">
+  <meta name="theme-color" content="#101722">
+  <title>操作手册 | Zentao Log Agent</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="manual-page">
+  <header class="site-header manual-site-header" aria-label="网站导航">
+    <a class="brand" href="index.html" aria-label="返回 Zentao Log Agent 首页">
+      <img src="assets/logo.png" alt="" width="38" height="38">
+      <span>Zentao Log Agent</span>
+    </a>
+    <nav aria-label="手册导航">
+      <a class="manual-link active" href="manual.html" aria-current="page">操作手册</a>
+      <a href="index.html">返回官网</a>
+      <a class="github-link" href="https://github.com/wanghuanlab/DS-OA-Agent" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="manual-hero">
+      <div class="band manual-hero-inner reveal">
+        <p class="eyebrow">PRODUCT GUIDE</p>
+        <h1>操作手册</h1>
+        <p>从代码提交总结到考勤工时计算，按步骤完成客户端配置。本文先介绍如何接入云之家个人打卡流水。</p>
+      </div>
+    </section>
+
+    <div class="manual-layout band">
+      <aside class="manual-toc" aria-label="本页目录">
+        <span>本页目录</span>
+        <a href="#attendance">自动统计工时</a>
+        <a href="#calculation">计算规则</a>
+        <a href="#troubleshooting">连接失败</a>
+      </aside>
+
+      <article class="manual-content">
+        <section id="attendance" class="manual-intro reveal">
+          <p class="eyebrow">ATTENDANCE HOURS</p>
+          <h2>通过云之家自动统计工时</h2>
+          <p>客户端读取所选日期的有效打卡流水，取当天最早和最晚时间计算工时。授权来自你当前登录的云之家页面，不需要在客户端填写云之家账号和密码。</p>
+        </section>
+
+        <section class="manual-step reveal" aria-labelledby="step-one-title">
+          <div class="manual-step-number">01</div>
+          <div class="manual-step-body">
+            <h3 id="step-one-title">打开考勤统计</h3>
+            <p>登录云之家，进入“全部应用”，在“协同办公”区域打开“考勤统计”。随后进入个人考勤统计页面。</p>
+            <figure class="manual-shot">
+              <img src="assets/manual-attendance-1.png" alt="云之家全部应用中的考勤统计入口" width="1596" height="1006" loading="lazy">
+              <figcaption>云之家工作台 → 全部应用 → 考勤统计</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="manual-step reveal" aria-labelledby="step-two-title">
+          <div class="manual-step-number">02</div>
+          <div class="manual-step-body">
+            <h3 id="step-two-title">复制授权后的完整 URL</h3>
+            <p>考勤页面打开后，点击浏览器地址栏并复制完整 URL。有效地址通常包含临时的 <code>ticket</code> 和 <code>expire_time</code> 参数，它们用于识别当前登录状态。</p>
+            <figure class="manual-shot wide-shot">
+              <img src="assets/manual-attendance-2.png" alt="在云之家个人考勤统计页面复制浏览器地址栏 URL" width="2846" height="680" loading="lazy">
+              <figcaption>复制当前页面完整地址；示例中的身份信息已脱敏</figcaption>
+            </figure>
+            <p class="manual-note"><strong>安全提示</strong> 授权 URL 等同于短期登录凭证，请勿发送给他人。客户端只会把它保存在当前电脑的本地 JSON 配置中。</p>
+          </div>
+        </section>
+
+        <section class="manual-step reveal" aria-labelledby="step-three-title">
+          <div class="manual-step-number">03</div>
+          <div class="manual-step-body">
+            <h3 id="step-three-title">粘贴 URL 并检测考勤</h3>
+            <p>打开 Zentao Log Agent 的“设置”，找到“云之家考勤”。把刚复制的地址粘贴到“个人打卡页面 URL”，配置会自动保存。点击“检测考勤”，成功后会显示获取到的天数与合计工时。</p>
+            <figure class="manual-shot wide-shot">
+              <img src="assets/manual-attendance-3.png" alt="在 Zentao Log Agent 设置中粘贴云之家 URL 并点击检测考勤" width="1900" height="500" loading="lazy">
+              <figcaption>设置 → 云之家考勤 → 粘贴 URL → 检测考勤</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="calculation" class="manual-reference reveal">
+          <p class="eyebrow">CALCULATION</p>
+          <h2>工时如何进入预览</h2>
+          <div class="manual-rule-list">
+            <div><span>01</span><p><strong>按天读取</strong> 只读取当前填报周期内的个人有效打卡记录。</p></div>
+            <div><span>02</span><p><strong>首末时间</strong> 以当天最早和最晚有效打卡的时间差作为当日工时，并按 0.5 小时取整。</p></div>
+            <div><span>03</span><p><strong>多任务分配</strong> 同一天有多个禅道任务时，先平均分配当天工时，总和保持一致；提交前仍可手动调整。</p></div>
+          </div>
+        </section>
+
+        <section id="troubleshooting" class="manual-fallback reveal">
+          <div>
+            <p class="eyebrow">OPTIONAL BY DESIGN</p>
+            <h2>考勤失败，不阻断填报。</h2>
+          </div>
+          <p>未登录、URL 缺少临时凭证、凭证过期或云之家暂时不可访问时，客户端只会显示提示，并继续使用原有耗时生成预览。保存预览和提交禅道也不会受到影响。</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-brand"><img src="assets/logo.png" alt="" width="32" height="32"><span>Zentao Log Agent</span></div>
+    <p>操作手册会随客户端能力持续更新。</p>
+    <a href="index.html">返回官网 <span aria-hidden="true">→</span></a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
