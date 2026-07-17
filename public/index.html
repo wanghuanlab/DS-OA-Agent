@@ -146,7 +146,7 @@
         <div class="settings-header">
           <div>
             <p class="eyebrow">应用设置</p>
-            <h1>连接与模型</h1>
+            <h1>连接与服务</h1>
             <p>修改后会自动保存到当前电脑，不会进入项目仓库。</p>
           </div>
           <button id="closeSettings" class="button quiet" type="button">返回工作台</button>
@@ -173,6 +173,19 @@
               <label>Base URL<input id="llmBaseUrl"></label>
               <label>模型<input id="llmModel"></label>
               <label class="field-span">API Key<input id="llmApiKey" type="password" autocomplete="off"></label>
+            </div>
+          </section>
+          <section class="settings-section">
+            <div>
+              <h2>云之家考勤</h2>
+              <p>可选读取个人打卡流水并计算每日工时，连接失败不会影响日志生成和提交。</p>
+            </div>
+            <div class="settings-fields">
+              <label class="field-span">个人打卡页面 URL<input id="attendanceReportUrl" autocomplete="off"></label>
+              <div class="field-span settings-inline-action">
+                <button id="checkAttendance" class="button secondary" type="button">检测考勤</button>
+                <span id="attendanceCheckState" class="inline-status" role="status">尚未检测</span>
+              </div>
             </div>
           </section>
         </div>

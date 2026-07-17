@@ -257,6 +257,7 @@ input:hover, textarea:hover, select:hover { border-color: #9eacbd; }
 .preview-row { padding: 14px 18px; border-top: 1px solid var(--line-soft); }
 .preview-date-cell { display: grid; gap: 8px; padding-top: 9px; }
 .date { font-weight: 750; }
+.attendance-time { color: var(--green); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .add-preview-entry { width: fit-content; border: 0; padding: 5px 0; color: var(--blue); background: transparent; cursor: pointer; font-weight: 650; }
 .remove-preview-entry { min-height: 40px; border: 0; color: var(--red); background: transparent; cursor: pointer; font-weight: 650; }
 .remove-preview-entry:hover { background: var(--red-soft); }
@@ -297,6 +298,11 @@ input:hover, textarea:hover, select:hover { border-color: #9eacbd; }
 .settings-save-state.saving { color: var(--blue); }
 .settings-save-state.success { color: var(--green); }
 .settings-save-state.error { color: var(--red); }
+.settings-inline-action { display: flex; align-items: center; gap: 14px; }
+.inline-status { color: var(--muted); font-size: 13px; }
+.inline-status.saving, .inline-status.info { color: var(--blue); }
+.inline-status.success { color: var(--green); }
+.inline-status.error { color: var(--red); }
 
 .toast-root { position: fixed; z-index: 30; right: 22px; bottom: 22px; display: grid; gap: 10px; width: min(360px, calc(100vw - 44px)); }
 .toast { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; color: var(--ink); background: #fff; box-shadow: var(--shadow); }

@@ -10,6 +10,7 @@ import { checkZentaoStatus, listZentaoTasks, submitToZentao } from './zentao.js'
 import { inspectCodeRepositories } from './vcs.js';
 import { staticPath } from './runtime-paths.js';
 import { listDirectoryRoots } from './directory-roots.js';
+import { enrichPreviewWithAttendance, fetchAttendance } from './attendance.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -42,7 +43,21 @@ export async function createServer() {
     const config = normalizeConfig(request.body?.config ?? await loadConfig());
     const period = request.body?.period ?? getDefaultPeriod();
     const preview = await generatePreview(config, { period });
-    return { preview: await savePreview(preview) };
+    const attendanceResult = await enrichPreviewWithAttendance(config, period, preview);
+    return {
+      preview: await savePreview(attendanceResult.preview),
+      attendanceWarning: attendanceResult.warning
+    };
+  });
+
+  app.post('/api/attendance/check', async (request) => {
+    const config = normalizeConfig(request.body?.config ?? await loadConfig());
+    const period = request.body?.period ?? getDefaultPeriod();
+    try {
+      return { attendance: await fetchAttendance(config, period), warning: '' };
+    } catch (error) {
+      return { attendance: null, warning: error.message || '云之家考勤不可用。' };
+    }
   });
 
   app.post('/api/repositories/check', async (request) => {

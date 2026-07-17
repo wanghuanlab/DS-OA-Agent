@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  DEFAULT_YUNZHIJIA_REPORT_URL,
   DEFAULT_ZENTAO_LOGIN_URL,
   DEFAULT_ZENTAO_TASK_PAGE_URL,
   normalizeConfig
 } from '../src/config.js';
+
+test('uses the Yunzhijia personal report page without embedding a ticket', () => {
+  const config = normalizeConfig({});
+
+  assert.equal(config.attendance.reportUrl, DEFAULT_YUNZHIJIA_REPORT_URL);
+  assert.equal(config.attendance.reportUrl.includes('ticket='), false);
+});
 
 test('fills default Zentao addresses when stored values are empty', () => {
   const config = normalizeConfig({ zentao: { loginUrl: '', taskPageUrl: '' } });

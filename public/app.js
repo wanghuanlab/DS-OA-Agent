@@ -38,6 +38,11 @@ function setSettingsSaveState(message, state = '') {
   $('settingsSaveState').className = `settings-save-state ${state}`.trim();
 }
 
+function setAttendanceCheckState(message, state = '') {
+  $('attendanceCheckState').textContent = message;
+  $('attendanceCheckState').className = `inline-status ${state}`.trim();
+}
+
 function setButtonBusy(button, busy, busyLabel = '处理中...') {
   if (busy) {
     button.dataset.label = button.textContent;
@@ -257,6 +262,8 @@ function readFormConfig() {
   config.llm.baseUrl = $('llmBaseUrl').value.trim();
   config.llm.apiKey = $('llmApiKey').value;
   config.llm.model = $('llmModel').value.trim();
+  config.attendance ??= {};
+  config.attendance.reportUrl = $('attendanceReportUrl').value.trim();
   config.report.code ??= {};
   config.report.code.type = 'auto';
   config.report.code.repositories = readRepositoriesFromDom();
@@ -307,6 +314,7 @@ function renderConfig() {
   $('llmBaseUrl').value = config.llm.baseUrl ?? '';
   $('llmApiKey').value = config.llm.apiKey ?? '';
   $('llmModel').value = config.llm.model ?? '';
+  $('attendanceReportUrl').value = config.attendance?.reportUrl ?? '';
   repositories = [...(config.report.code?.repositories ?? config.report.hg?.repositories ?? [])];
   authorOptions = (config.report.code?.authors ?? []).map((name) => ({ name, count: 0 }));
   renderRepositories();
@@ -376,8 +384,12 @@ function renderPreview() {
     row.className = 'preview-row';
     row.dataset.previewDate = entry.date;
     row.dataset.previewIndex = String(index);
+    const attendanceDay = preview.attendance?.days?.[entry.date];
+    const attendanceSummary = firstForDate && attendanceDay
+      ? `<small class="attendance-time">${attendanceDay.last ? `${escapeHtml(attendanceDay.first)}–${escapeHtml(attendanceDay.last)} · ${escapeHtml(formatHours(attendanceDay.hours))}h` : `${escapeHtml(attendanceDay.first || '无完整记录')} · 无法计算`}</small>`
+      : '';
     row.innerHTML = `
-      <div class="preview-date-cell">${firstForDate ? `<span class="date">${escapeHtml(entry.date)}</span><button type="button" class="add-preview-entry" data-add-preview-date="${escapeHtml(entry.date)}">添加任务</button>` : ''}</div>
+      <div class="preview-date-cell">${firstForDate ? `<span class="date">${escapeHtml(entry.date)}</span>${attendanceSummary}<button type="button" class="add-preview-entry" data-add-preview-date="${escapeHtml(entry.date)}">添加任务</button>` : ''}</div>
       <div>${taskSelectHtml(entry.taskId ?? '')}</div>
       <textarea rows="3" aria-label="工作描述">${escapeHtml(entry.content || (entry.items ?? []).join('\n'))}</textarea>
       <input class="hours-input" aria-label="耗时小时" type="number" min="0" step="0.5" value="${escapeHtml(entry.hours ?? 8)}">
@@ -577,10 +589,41 @@ $('commitAuthors').addEventListener('change', () => {
   scheduleAutoSave();
 });
 
-for (const id of ['zentaoLoginUrl', 'zentaoUsername', 'zentaoPassword', 'zentaoTaskPageUrl', 'llmBaseUrl', 'llmApiKey', 'llmModel']) {
+for (const id of ['zentaoLoginUrl', 'zentaoUsername', 'zentaoPassword', 'zentaoTaskPageUrl', 'llmBaseUrl', 'llmApiKey', 'llmModel', 'attendanceReportUrl']) {
   $(id).addEventListener('input', () => scheduleAutoSave());
   $(id).addEventListener('change', () => scheduleAutoSave());
 }
+
+$('checkAttendance').addEventListener('click', async () => {
+  const button = $('checkAttendance');
+  setButtonBusy(button, true, '正在检测...');
+  setAttendanceCheckState('正在读取所选日期的打卡记录...', 'saving');
+  try {
+    const data = await jsonFetch('/api/attendance/check', {
+      method: 'POST',
+      body: JSON.stringify({
+        config: readFormConfig(),
+        period: { startDate: $('startDate').value, endDate: $('endDate').value }
+      })
+    });
+    if (data.warning) throw new Error(data.warning);
+    const days = Object.values(data.attendance.days ?? {});
+    const calculated = days.filter((day) => Number.isFinite(day.hours));
+    if (calculated.length === 0) {
+      setAttendanceCheckState('连接成功，但所选日期没有完整打卡记录', 'info');
+      showToast('云之家连接成功，但所选日期没有至少两次有效打卡。', 'info');
+    } else {
+      const total = calculated.reduce((sum, day) => sum + day.hours, 0);
+      setAttendanceCheckState(`已获取 ${calculated.length} 天，合计 ${formatHours(total)} 小时`, 'success');
+      showToast(`云之家考勤检测成功：${calculated.length} 天可自动计算工时。`, 'success');
+    }
+  } catch (error) {
+    setAttendanceCheckState('检测失败，不影响日志填报', 'error');
+    showToast(error.message || '云之家考勤检测失败，不影响日志填报。', 'error');
+  } finally {
+    setButtonBusy(button, false);
+  }
+});
 
 $('preview').addEventListener('click', (event) => {
   const addDate = event.target.dataset.addPreviewDate;
@@ -672,6 +715,11 @@ $('generate').addEventListener('click', async () => {
   preview = data.preview;
   renderPreview();
   setActiveStep(2);
+  if (data.attendanceWarning) {
+    showToast(`考勤工时未应用：${data.attendanceWarning}`, 'info');
+  } else if (Object.values(preview.attendance?.days ?? {}).some((day) => Number.isFinite(day.hours))) {
+    showToast('已根据云之家最早和最晚打卡时间计算每日工时。', 'success');
+  }
 });
 
 $('backToPrepare').addEventListener('click', () => setActiveStep(1));

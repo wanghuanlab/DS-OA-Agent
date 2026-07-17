@@ -5,6 +5,7 @@ import { dataPath } from './runtime-paths.js';
 export const CONFIG_PATH = 'config/config.json';
 export const DEFAULT_ZENTAO_LOGIN_URL = 'http://192.168.0.216:30085/user-login.html';
 export const DEFAULT_ZENTAO_TASK_PAGE_URL = 'http://192.168.0.216:30085/my-work-task.html';
+export const DEFAULT_YUNZHIJIA_REPORT_URL = 'https://yunzhijia.com/smartatt-web/#/record/personal-report';
 
 export const DEFAULT_CONFIG = {
   server: { host: '127.0.0.1', port: 5173, openBrowserOnStart: true },
@@ -21,6 +22,9 @@ export const DEFAULT_CONFIG = {
     apiKey: '',
     model: 'deepseek-v4-flash',
     temperature: 0.2
+  },
+  attendance: {
+    reportUrl: DEFAULT_YUNZHIJIA_REPORT_URL
   },
   report: {
     defaultSource: 'code',

@@ -18,6 +18,9 @@
     "model": "deepseek-v4-flash",
     "temperature": 0.2
   },
+  "attendance": {
+    "reportUrl": "https://yunzhijia.com/smartatt-web/#/record/personal-report"
+  },
   "report": {
     "defaultSource": "code",
     "period": {
